@@ -66,3 +66,7 @@ camera_code may (or may not) contain "-" in the file name.
 <p float="left">
   <img src="demo/3d_reconstruction.png" width="800"/>
 </p>
+
+## License
+
+This project is released under the [Apache 2.0 license](LICENSE).
