@@ -258,14 +258,14 @@ class hexa_process:
             logger.info("Can't find representative circles.")
             return 0
 
-        num_circle = len(circles.squeeze())
-
         if circles is None:
             logger.info("No circles are detected. Parameters will be loose.")
 
             return self._extract_circle(src, par1=par1*np.random.uniform(low=0.6, high=0.8), par2=par2*np.random.uniform(low=0.6, high=0.8), count=count+1)
 
-        elif num_circle < 4:
+        num_circle = len(circles.squeeze())
+
+        if num_circle < 4:
             logger.info(
                 f"Not enough number of circles are detected. ({num_circle} circles) Parameters will be loose.")
             return self._extract_circle(src, par1=par1*np.random.uniform(low=0.7, high=0.9), par2=par2*np.random.uniform(low=0.7, high=0.9), count=count+1)
