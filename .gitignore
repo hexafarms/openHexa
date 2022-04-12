@@ -2,3 +2,5 @@ checker
 images
 __pycache__
 hexa_meta.json
+output
+*.csv

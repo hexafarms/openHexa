@@ -8,6 +8,7 @@ import os
 import json
 from json.decoder import JSONDecodeError
 from numpyencoder import NumpyEncoder
+import torch
 
 
 @dataclass
@@ -18,6 +19,8 @@ class hexa_img:
     name: str = None
     param: Optional[Dict[str, int]] = None  # camera parameter
     ratio: Optional[float] = None  # cm2 per pixel
+    model = None
+    area: float = None
 
     # @property
     def load_img(self, filepath: str, metapath: str, separator):
@@ -101,6 +104,27 @@ class hexa_img:
 
         return self
 
+    def segment_with_model(self, show=False, pallete_path= None):
+        """
+        image segmentation based on MMsegmentation
+        model is already mounted in self.
+
+        TODO: write more
+        """
+        from mmseg.apis import inference_segmentor, init_segmentor
+        self.mask = inference_segmentor(self.model, self.img)
+
+        if show:
+            self.model.show_result(self.img, self.mask, out_file= os.path.join(pallete_path,"palatte_"+self.name), opacity=0.5)
+
+        return self
+
+    def mount(self, config_file, checkpoint_file, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+        from mmseg.apis import init_segmentor
+        self.model = init_segmentor(config_file, checkpoint_file, device=device)
+        return self
+
+
     def compute_area(self) -> float:
         """ Compute the actual area from mask image """
 
@@ -127,11 +151,13 @@ class hexa_img:
                 filtered_contours.append(contour)
 
         ''' area of leaf area in cm^2 '''
-        area_cm2 = pixel_area * self.ratio
+        self.area = round(pixel_area * self.ratio)
         logger.info(
-            f"Computed foreground area of {self.name} is: {area_cm2} cm2.")
-        return area_cm2
-
+            f"Computed foreground area of {self.name} is: {self.area} cm2.")
+        return self
+    
+    def document(self, areas):
+        areas.append([self.name, self.area])
 
 class hexa_process:
     """ image processing to get meta data """
@@ -208,6 +234,7 @@ class hexa_process:
         default_par2 = 30
         logger.info(f"{filepath} will be processed.")
 
+        #TODO: if calibration information is available in meta, use the undistort image. if not, use the original image. 
         src = cv2.imread(filepath, cv2.IMREAD_COLOR)
         gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
         gray = cv2.medianBlur(gray, 5)
