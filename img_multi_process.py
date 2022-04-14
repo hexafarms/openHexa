@@ -13,7 +13,7 @@ if __name__ == "__main__":
     CHECKPOINT = "/home/hexaburbach/codes/mmsegmentation/fast_api/best_model/iter_320000.pth"
 
     img_ext = (".jpg", ".JPG", ".png", ".PNG")
-    areas = []
+    areas = [["file_name","area_cm2", "volume_cm3"]]
 
     imgs = sorted(filter(lambda path: path.suffix in img_ext, Path(
         IMGFILE_DIR).glob("*")), key=lambda path: str(path))
@@ -31,3 +31,4 @@ if __name__ == "__main__":
     with open(CSVFILE, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(areas)
+    

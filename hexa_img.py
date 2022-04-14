@@ -21,6 +21,7 @@ class hexa_img:
     ratio: Optional[float] = None  # cm2 per pixel
     model = None
     area: float = None
+    volume: float = None
 
     # @property
     def load_img(self, filepath: str, metapath: str, separator):
@@ -142,22 +143,31 @@ class hexa_img:
                                        cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         pixel_area = 0
-        filtered_contours = []
-        thres = int(self.shape[0]*self.shape[1]/10**4)
+        volume = 0
+        thres = int(self.shape[0]*self.shape[1]/10**5)
         for contour in contours:
             c_area = cv2.contourArea(contour)
-            if c_area > thres:
-                pixel_area += c_area
-                filtered_contours.append(contour)
+            if c_area < thres:
+                """ neglect too small mask """
+                continue
+            pixel_area += c_area
+
+            # # volume model 1 (assumption: half-sphere, separate plants)
+            # mean_r = (c_area * self.ratio/np.pi)**0.5
+            # volume += 2/3*np.pi*mean_r**3 
+        # volume model 2 (assumtion: we know the number of separate plants)
+        QUANTITY = 14
+        volume = 2/3 * np.pi *((pixel_area / QUANTITY * self.ratio/np.pi)**1.5) * QUANTITY
 
         ''' area of leaf area in cm^2 '''
         self.area = round(pixel_area * self.ratio)
+        self.volume = round(volume)
         logger.info(
-            f"Computed foreground area of {self.name} is: {self.area} cm2.")
+            f"Computed foreground area of {self.name} is: {self.area} cm2, volume is {self.volume} cm3")
         return self
     
     def document(self, areas):
-        areas.append([self.name, self.area])
+        areas.append([self.name, self.area, self.volume])
 
 class hexa_process:
     """ image processing to get meta data """
