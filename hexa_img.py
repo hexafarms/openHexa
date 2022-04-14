@@ -9,6 +9,7 @@ import json
 from json.decoder import JSONDecodeError
 from numpyencoder import NumpyEncoder
 import torch
+from typing import Any
 
 
 @dataclass
@@ -16,12 +17,13 @@ class hexa_img:
     """ image format handling Computer Vision task """
     img: np.ndarray = None
     mask: np.ndarray = None
-    name: str = None
-    param: Optional[Dict[str, int]] = None  # camera parameter
-    ratio: Optional[float] = None  # cm2 per pixel
-    model = None
-    area: float = None
-    volume: float = None
+    name: str= None
+    param: Optional[Dict[str, int]] = None# camera parameter
+    ratio: Optional[float] = 0 # cm2 per pixel
+    area: Optional[float] = 0
+    volume: Optional[float] = 0
+    count: int = 0 # the number of plants in the bench
+    model: Any = None
 
     # @property
     def load_img(self, filepath: str, metapath: str, separator):
@@ -42,18 +44,27 @@ class hexa_img:
         camera_code = separator.join(
             os.path.basename(filepath).split(separator)[:-1])
 
+        if camera_code not in data.keys():
+            logger.warning(f"no camera info in meta data.")
+            return self
+
         if 'parameters' in data[camera_code].keys():
-            logger.info(f"parameters of {filepath} is loaded.")
+            logger.success(f"parameters of {filepath} is loaded.")
             self.param = data[camera_code]['parameters']
         else:
-            logger.info(f"parameters of {filepath} don't exist in {metapath}.")
+            logger.warning(f"parameters of {filepath} don't exist in {metapath}. no undistortion will be applied.")
 
         if 'pixel2cm' in data[camera_code].keys():
-            logger.info(f"ratio of pixel to cm2 of {filepath} is loaded.")
+            logger.success(f"ratio of pixel to cm2 of {filepath} is loaded.")
             self.ratio = data[camera_code]['pixel2cm']
         else:
-            logger.info(
-                f"ratio of pixel to cm2 of {filepath} don't exist in {metapath}.")
+            logger.warning(
+                f"ratio of pixel to cm2 of {filepath} don't exist in {metapath}. area will be in pixel level.")
+            self.ratio = 1
+        return self
+
+    def update_count(self, count:int):
+        self.count = count
         return self
 
     @property
@@ -68,6 +79,11 @@ class hexa_img:
 
     def undistort(self, outpath=None):
         """ undistort image """
+
+        if self.param == None:
+            logger.warning("ndistortion is not processed. Use the original image.")
+            return self
+
         mtx = np.array(self.param['intrinsic'])
         dist = np.array(self.param['distortion coef.'])
         h, w, _ = self.shape
@@ -79,7 +95,8 @@ class hexa_img:
         dst = cv2.remap(
             self.img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
-        if outpath == None:
+        if outpath == None and distort_quality_check(dst):
+            logger.info("undistortion is well processed.")
             self.img = dst
             return self
 
@@ -112,7 +129,7 @@ class hexa_img:
 
         TODO: write more
         """
-        from mmseg.apis import inference_segmentor, init_segmentor
+        from mmseg.apis import inference_segmentor
         self.mask = inference_segmentor(self.model, self.img)
 
         if show:
@@ -144,26 +161,38 @@ class hexa_img:
 
         pixel_area = 0
         volume = 0
-        thres = int(self.shape[0]*self.shape[1]/10**5)
+        count = 0 # the number of plants
+        thres = int(self.shape[0]*self.shape[1]/10**3) # if you 
+
         for contour in contours:
             c_area = cv2.contourArea(contour)
             if c_area < thres:
                 """ neglect too small mask """
                 continue
             pixel_area += c_area
+            count += 1
 
             # # volume model 1 (assumption: half-sphere, separate plants)
             # mean_r = (c_area * self.ratio/np.pi)**0.5
             # volume += 2/3*np.pi*mean_r**3 
         # volume model 2 (assumtion: we know the number of separate plants)
-        QUANTITY = 14
-        volume = 2/3 * np.pi *((pixel_area / QUANTITY * self.ratio/np.pi)**1.5) * QUANTITY
+        if count > self.count:
+            """ If new plants are transplanted, then update the count value. """
+            logger.info(f"Update the number of plants from {self.count} to {count}")
+            self.count = count
+
+        assert self.count != 0, "There is no plants in the image."
+
+        if not self.ratio:
+            logger.warning("No ratio between pixel to dimension. Output unit is in pixel.")
+            self.ratio = 1
+        volume = 2/3 * np.pi *((pixel_area /self.count* self.ratio/np.pi)**1.5) * self.count
 
         ''' area of leaf area in cm^2 '''
         self.area = round(pixel_area * self.ratio)
         self.volume = round(volume)
         logger.info(
-            f"Computed foreground area of {self.name} is: {self.area} cm2, volume is {self.volume} cm3")
+            f"Computed foreground area is: {self.area} cm2, volume is {self.volume} cm3")
         return self
     
     def document(self, areas):
@@ -171,6 +200,9 @@ class hexa_img:
 
 class hexa_process:
     """ image processing to get meta data """
+
+    def __init__(self):
+        self.camera_code = None
 
     def calibrate(self, imgpath_checker, corner_w, corner_h, metafile, separator="-"):
         objpoints = []
@@ -184,14 +216,12 @@ class hexa_process:
                                0:corner_w].T.reshape(-1, 2)
         images = glob.glob(imgpath_checker + '/*')
 
-        camera_code = None
-
         for fname in images:
-            if camera_code == None:
-                camera_code = separator.join(os.path.basename(
-                    fname).split(separator)[:-1])+separator
+            if self.camera_code == None:
+                self.camera_code = separator.join(os.path.basename(
+                    fname).split(separator)[:-1])
 
-            elif camera_code != separator.join(os.path.basename(fname).split(separator)[:-1])+separator:
+            elif self.camera_code != separator.join(os.path.basename(fname).split(separator)[:-1]):
                 logger.warning(
                     f"Every checker image should have same camera code: camera code{separator}image number. If there is multiple separator, the last separator is counted.")
                 break
@@ -232,12 +262,14 @@ class hexa_process:
                 f"Your RMS re-projection error is {ret}. This is acceptable.")
             value = {"intrinsic": mtx,
                      "distortion coef.": dist}
-            self._update_meta(camera_code, value, metafile,
+            self._update_meta(self.camera_code+separator, value, metafile,
                               separator=separator, mode="parameters")
 
         else:
             logger.info(
                 f"Your RMS re-projection error is {ret}. Inacceptable!. Use the better quality of checker board images.")
+
+        return self
 
     def compute_px_ratio(self, filepath: str, metapath: str, separator, actual_dim,  debug=True) -> float:
         default_par1 = 200
@@ -245,7 +277,27 @@ class hexa_process:
         logger.info(f"{filepath} will be processed.")
 
         #TODO: if calibration information is available in meta, use the undistort image. if not, use the original image. 
+
+        with open(os.path.join(metapath, "hexa_meta.json"), "r+") as j:
+            try:
+                data = json.load(j)
+            except JSONDecodeError:
+                logger.warning(
+                    "Json file should not be empty. Delete the empty file and run again.")
+                return 0
+
         src = cv2.imread(filepath, cv2.IMREAD_COLOR)
+        if self.camera_code == None:
+            self.camera_code = separator.join(os.path.basename(
+                    filepath).split(separator)[:-1])
+
+        if self.camera_code in data.keys() and "parameters" in data[self.camera_code].keys():
+            mtx = np.array(data[self.camera_code]["parameters"]["intrinsic"])
+            dist = np.array(data[self.camera_code]["parameters"]["distortion coef."])
+            undist_src = self._undistort(src, mtx, dist)
+            if distort_quality_check(undist_src):
+                src = undist_src
+
         gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
         gray = cv2.medianBlur(gray, 5)
 
@@ -260,6 +312,21 @@ class hexa_process:
         ratio = self._compute_ratio(radius, actual_dim)
         self._update_meta(filepath, ratio, metapath,
                           separator, mode="pixel2cm",)
+
+    @staticmethod
+    def _undistort(img, mtx, dist):
+        """ undistort image """
+
+        h, w, _ = img.shape
+
+        newcameramtx = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(
+            mtx, dist[:, :-1].squeeze(), (w, h), np.eye(3), balance=1)
+        map1, map2 = cv2.fisheye.initUndistortRectifyMap(
+            K=mtx, D=dist[:, :-1].squeeze(), R=np.eye(3), P=newcameramtx, size=(w, h), m1type=cv2.CV_32FC1)
+        dst = cv2.remap(
+            img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        return dst
+
 
     def _extract_circle(self, src, par1: float, par2: float, debug=True, count=0) -> float:
         """
@@ -291,7 +358,7 @@ class hexa_process:
             cv2.imshow("detected circles", temp_src)
             cv2.waitKey(0)
 
-        if count > 20:
+        if count > 30:
             logger.info("Can't find representative circles.")
             return 0
 
@@ -305,13 +372,13 @@ class hexa_process:
         if num_circle < 4:
             logger.info(
                 f"Not enough number of circles are detected. ({num_circle} circles) Parameters will be loose.")
-            return self._extract_circle(src, par1=par1*np.random.uniform(low=0.7, high=0.9), par2=par2*np.random.uniform(low=0.7, high=0.9), count=count+1)
+            return self._extract_circle(src, par1=par1*np.random.uniform(low=0.7, high=1.1), par2=par2*np.random.uniform(low=0.7, high=1.1), count=count+1)
 
         # if it doesn't converge, increase the value to higher than 2.
         elif np.std(circles.squeeze()[:, 2]) > 2:
             logger.info(
                 "Too many circles with different size. Parameters will be strict.")
-            return self._extract_circle(src, par1=par1*np.random.uniform(low=1.1, high=1.3), par2=par2*np.random.uniform(low=1.1, high=1.3), count=count+1)
+            return self._extract_circle(src, par1=par1*np.random.uniform(low=0.9, high=1.3), par2=par2*np.random.uniform(low=0.9, high=1.3), count=count+1)
 
         else:
             circle_radius = np.median(circles, axis=1)[0, 2]
@@ -406,3 +473,19 @@ class hexa_process:
                 logger.info(f"Generate a new meta data.")
                 with open(loc_meta, 'w') as f:
                     json.dump(meta, f, indent=4, cls=NumpyEncoder)
+
+def distort_quality_check(img: np.ndarray)->bool:
+    """ Check if the undistorted image is correct given the input is from fish-eye camera. """
+
+    h, w, _ = img.shape
+    h_edge = h//40
+    w_edge = w//40
+    
+    if img[:h_edge, w_edge].sum() + img[-h_edge:, -w_edge:].sum() + img[:h_edge, -w_edge:].sum() + img[-h_edge:, :w_edge].sum() == 0:
+        """ Undistortion failed """
+        logger.warning("Distortion has failed. Check the calibration process again.")
+        return False
+
+    else:
+        logger.success("Distortion is well done.")
+        return True
