@@ -17,6 +17,7 @@ class hexa_img:
     """ image format handling Computer Vision task """
     img: np.ndarray = None
     mask: np.ndarray = None
+    pallete: np.ndarray = None
     name: str= None
     param: Optional[Dict[str, int]] = None# camera parameter
     ratio: Optional[float] = 0 # cm2 per pixel
@@ -63,6 +64,32 @@ class hexa_img:
             self.ratio = 1
         return self
 
+    def remove(self,points:List):
+        h, w, _ = self.shape
+        points_arr = np.array(points)
+        ptr_shape = points_arr.shape
+        points_arr = points_arr.reshape(-1)
+
+        """ convert end letter to the edge index of image """
+        for i, point in enumerate(points_arr):
+            if point == 'end' and i%2:
+                """ if end is on y-axis """
+                points_arr[i] = h
+            elif point == 'end' and not i%2:
+                points_arr[i] = w
+        points_arr = points_arr.reshape(ptr_shape).astype(np.uint32)
+
+        ptrs_black = []
+        """ Find another end point of triangle """
+        for point in points_arr:
+            ptr1, ptr2 = point
+            ptr3 = np.array([w, h]) * (ptr1 * ptr2 > 0)
+            ptrs_black.append(np.vstack((ptr1,ptr2,ptr3)))
+        
+        cv2.fillPoly(self.img, ptrs_black, 0)
+
+        return self
+
     def update_count(self, count:int):
         self.count = count
         return self
@@ -81,7 +108,7 @@ class hexa_img:
         """ undistort image """
 
         if self.param == None:
-            logger.warning("ndistortion is not processed. Use the original image.")
+            logger.warning("distortion is not processed. Use the original image.")
             return self
 
         mtx = np.array(self.param['intrinsic'])
@@ -95,10 +122,15 @@ class hexa_img:
         dst = cv2.remap(
             self.img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
-        if outpath == None and distort_quality_check(dst):
-            logger.info("undistortion is well processed.")
-            self.img = dst
-            return self
+        if outpath == None:
+            if distort_quality_check(dst):
+                logger.success("undistortion is well processed.")
+                self.img = dst
+                return self
+            else:
+                logger.warning("undistortion failed. check the meta data.")
+                logger.info("no undistortion due to inappropriate meta data")
+                return self
 
         save_name = os.path.join(outpath, "undistort_"+self.name)
         cv2.imwrite(save_name, dst)
@@ -133,7 +165,11 @@ class hexa_img:
         self.mask = inference_segmentor(self.model, self.img)
 
         if show:
+            """ Save the segmentation image file """
             self.model.show_result(self.img, self.mask, out_file= os.path.join(pallete_path,"palatte_"+self.name), opacity=0.5)
+        else:
+            self.pallete = self.model.show_result(self.img, self.mask, opacity=0.5)
+
 
         return self
 
@@ -162,7 +198,7 @@ class hexa_img:
         pixel_area = 0
         volume = 0
         count = 0 # the number of plants
-        thres = int(self.shape[0]*self.shape[1]/10**3) # if you 
+        thres = int(self.shape[0]*self.shape[1]/10**3) # if you want to change the sensitivity, then modify the value.
 
         for contour in contours:
             c_area = cv2.contourArea(contour)
@@ -195,8 +231,36 @@ class hexa_img:
             f"Computed foreground area is: {self.area} cm2, volume is {self.volume} cm3")
         return self
     
-    def document(self, areas):
+    def document(self, areas, graph=False):
         areas.append([self.name, self.area, self.volume])
+        if graph:
+            import matplotlib.pyplot as plt
+            import pandas as pd
+            import seaborn as sns
+            import datetime
+
+            df = pd.DataFrame(areas)
+            df = df.rename(columns=df.iloc[0]).drop(df.index[0])
+            df['second'] = df['file_name'].apply(lambda x: x.split('-')[-1].split('.')[0])
+            df['second'] = df['second'].astype('int64')
+            df['hour'] = df['second'].subtract(df['second'].min()).div(3600)
+
+            fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(40,15))
+            date = datetime.datetime.fromtimestamp(df['second'].iloc[-1]).strftime('%Y-%m-%d %H:%M:%S')
+            fig.suptitle(f"Date of monitoring: {date}", fontsize=32)
+            ax[0].set_title("Segmented Plant Image", fontsize=24)
+            ax[0].axis('off')
+            ax[0].imshow(self.pallete)
+            ax[1].set_title("Plant Growth",fontsize=24)
+            ax[1] = plt.gca()
+
+            sns.lineplot(x = "hour", y= "area_cm2", data=df, linewidth = 3,  color='r',estimator=np.mean, legend="auto")
+            ax[1].set_xlabel("hour", fontsize=16)
+            ax[1].set_ylabel("area (unit: cm2)", fontsize=16)
+            plt.savefig(os.path.join("output",f'{date}.png'))
+
+
+
 
 class hexa_process:
     """ image processing to get meta data """

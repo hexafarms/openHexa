@@ -45,10 +45,17 @@ camera_code may (or may not) contain "-" in the file name.
     After undistortion, apply [semantic segmentation](https://github.com/hexafarms/mmsegmentation).
     By using the segmentation mask, compute area.
 
-5. Reconstruct plant models using camera parameters <br>
+5. Tracking the growth of plants ([video](https://www.youtube.com/watch?v=ZE3k3feZKHE))
+    ```
+    hexa.document(areas, graph=True)
+    ```
+    
+
+6. Reconstruct plant models using camera parameters <br>
     `TBD`
 
 ## Demo
+
 1. Image undistortion.
 <p float="left">
   <img src="demo/distort_demo.jpg" width="400"/>
@@ -62,7 +69,12 @@ camera_code may (or may not) contain "-" in the file name.
 <p float="left">
   <img src="demo/segmentation.jpg" width="800"/>
 </p>
-4. 3D reconstruction
+4. Plant Growth 
+<p float="left">
+  <img src="demo/growth_demo.png" width="800"/>
+</p>
+
+5. 3D reconstruction
 <p float="left">
   <img src="demo/3d_reconstruction.png" width="800"/>
 </p>
