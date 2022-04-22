@@ -2,7 +2,7 @@ from hexa_img import hexa_process
 
 if __name__ == "__main__":
 
-    INPUT = "images/dev-0-1640275201.jpg"
+    INPUT = "dev-6-1648310401.jpg"
     PATHCHECKER = "checker"
     SEPARATOR = "-"
     METAPATH = "."
@@ -13,7 +13,7 @@ if __name__ == "__main__":
     hexa = hexa_process()
     hexa.calibrate(imgpath_checker=PATHCHECKER, corner_w=CORNER_WIDTH,
                    corner_h=CORNER_HEIGHT, metafile=METAPATH, separator=SEPARATOR)
-    
+                   
     hexa.compute_px_ratio(filepath=INPUT,
                           metapath=METAPATH, separator=SEPARATOR, actual_dim=ACTUAL_DIM)
     

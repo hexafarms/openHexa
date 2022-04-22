@@ -12,8 +12,7 @@ def parse_args():
         description="Get Camera Calibration Parameters")
 
     parser.add_argument("--img_dir",
-                        # default="/media/hexaburbach/onetb/image_sync_manual/shoot1_lettuce",
-                        default="G8T1-9400-0452-1S6N-1649786403.jpg",
+                        default="images",
                         help="Location of raw images' directory or an image file.")
 
     parser.add_argument("--meta",
@@ -40,6 +39,9 @@ def parse_args():
                         default="-",
                         help="Separation key word")
 
+    parser.add_argument("--remove",
+                        default=False,
+                        help="remove irrelvant reigion.")
             
 
     args = parser.parse_args()
@@ -56,6 +58,7 @@ if __name__ == "__main__":
     CONFIG = args.config
     CHECKPOINT = args.weight
     OUTIMG = args.out
+    REMOVE = args.remove
 
     img_ext = (".jpg", ".JPG", ".png", ".PNG", ".jpeg", ".JPEG")
     areas = [["file_name","area_cm2", "volume_cm3"]]
@@ -82,10 +85,12 @@ if __name__ == "__main__":
         hexa = replace(hexa_base)
         hexa.update_count(count_plants)
         hexa.load_img(filepath=img, metapath=METAPATH, separator=SEPARATOR)
-        hexa.undistort().segment_with_model(show=True, pallete_path=OUTIMG).compute_area().document(areas)
+        if REMOVE:
+            hexa.remove(REMOVE)
+        hexa.undistort().segment_with_model(show=True, pallete_path=OUTIMG).compute_area().document(areas, graph=False)
         count_plants = hexa.count
 
-    """ Save areas """
+    """ Save areas to csv """
     with open(CSVFILE, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(areas)
