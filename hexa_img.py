@@ -11,6 +11,9 @@ from numpyencoder import NumpyEncoder
 import torch
 from typing import Any
 
+""" This is for airflow api to connect into mmseg """
+import sys
+sys.path.append('/mmsegmentation')
 
 @dataclass
 class hexa_img:
@@ -160,11 +163,8 @@ class hexa_img:
         model is already mounted in self.
 
         TODO: write more
-        """
-        """ This is for airflow api """
-        import sys
-        sys.path.append('/mmsegmentation')
-        
+        """        
+
         from mmseg.apis import inference_segmentor
         self.mask = inference_segmentor(self.model, self.img)
 
