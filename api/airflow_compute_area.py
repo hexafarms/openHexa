@@ -14,4 +14,4 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    print(args.image)
+    print({"input_args: ": args.image })
