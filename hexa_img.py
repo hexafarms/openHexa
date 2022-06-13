@@ -23,7 +23,7 @@ class hexa_img:
     ratio: Optional[float] = 0 # cm2 per pixel
     area: Optional[float] = 0
     volume: Optional[float] = 0
-    count: int = 0 # the number of plants in the bench
+    count: int = 1 # the number of plants in the bench
     model: Any = None
 
     # @property
@@ -231,8 +231,12 @@ class hexa_img:
             f"Computed foreground area is: {self.area} cm2, volume is {self.volume} cm3")
         return self
     
-    def document(self, areas, graph=False):
-        areas.append([self.name, self.area, self.volume])
+    def document(self, areas, graph=False, volume=True):
+        if volume:
+            areas.append([self.name, self.area, self.volume])
+        else:
+            areas.append([self.name, self.area])
+
         if graph:
             import matplotlib.pyplot as plt
             import pandas as pd
