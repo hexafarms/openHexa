@@ -1,5 +1,6 @@
 from tkinter import SEPARATOR
 from hexa_img import hexa_img
+import os
 from pathlib import Path
 import csv
 from dataclasses import replace
@@ -48,20 +49,43 @@ def parse_args():
     return args
 
 
-if __name__ == "__main__":
+def compute_area_api(images):
+    METAPATH = "/Hexa_image/data/hexa_meta.json"
+    SEPARATOR = "-"
+    IMGFILE_DIR = "/Hexa_image/data/images/pictures"
+    CONFIG = "/weights/v2/config.py"
+    CHECKPOINT = "/weights/v2/weights.pth"
 
-    args = parse_args()
+    areas = []
+
+    hexa_base = hexa_img()
+    """ mount segmentation model """
+    hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT)
+
+    """ process images """
+    for img in images:
+        img_full_path =  os.path.join(IMGFILE_DIR, img)
+        hexa = replace(hexa_base)
+        hexa.load_img(filepath=img_full_path, metapath=METAPATH, separator=SEPARATOR)
+        hexa.undistort().segment_with_model(show=False, pallete_path=None).compute_area().document(areas, graph=False, volume=False)
+
+    return areas
+
+def compute_area(args, include_header = False):
     METAPATH = args.meta
-    CSVFILE = args.csv
     SEPARATOR = args.separator
     IMGFILE_DIR = args.img_dir
     CONFIG = args.config
     CHECKPOINT = args.weight
     OUTIMG = args.out
     REMOVE = args.remove
+    REMOVE = [ [[400,0],[0,400]] , [['end',100],[1100,'end']] , [[150,'end'],[0,550]] ]
 
     img_ext = (".jpg", ".JPG", ".png", ".PNG", ".jpeg", ".JPEG")
-    areas = [["file_name","area_cm2", "volume_cm3"]]
+    if include_header:
+        areas = [["file_name","area_cm2", "volume_cm3"]]
+    else:
+        areas = []
     count_plants = 0
 
     img_path = Path(IMGFILE_DIR)
@@ -90,8 +114,16 @@ if __name__ == "__main__":
         hexa.undistort().segment_with_model(show=True, pallete_path=OUTIMG).compute_area().document(areas, graph=False)
         count_plants = hexa.count
 
+    return areas
+
+if __name__ == "__main__":
+
+    args = parse_args()
+    
+    areas = compute_area(args, include_header = True)
+
     """ Save areas to csv """
-    with open(CSVFILE, "w", newline="") as f:
+    with open(args.csv, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(areas)
     
