@@ -161,6 +161,10 @@ class hexa_img:
 
         TODO: write more
         """
+        """ This is for airflow api """
+        import sys
+        sys.path.append('/mmsegmentation')
+        
         from mmseg.apis import inference_segmentor
         self.mask = inference_segmentor(self.model, self.img)
 
