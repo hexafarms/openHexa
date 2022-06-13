@@ -5,3 +5,6 @@ hexa_meta.json
 output
 *.csv
 *.jpg
+
+# ... except the .gitignore...
+!.gitignore
