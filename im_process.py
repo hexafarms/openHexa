@@ -69,9 +69,7 @@ def compute_area_api(images):
         hexa.load_img(filepath=img_full_path, metapath=METAPATH, separator=SEPARATOR)
         hexa.undistort().segment_with_model(show=False, pallete_path=None).compute_area().document(areas, graph=False, volume=False)
 
-    """ convert list to SQL format """
-    output = ',' .join(list(map(lambda x: "('" + x[0] + "', " + str(x[1]) +  ")", areas)))
-    return output
+    return areas
 
 def compute_area(args, include_header = False):
     METAPATH = args.meta
