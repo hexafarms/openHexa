@@ -76,8 +76,8 @@ def compute_area_api(images):
     } # It should be synced to postgresql DB (img_format)
 
     """ convert list to SQL format """
-    breakpoint()
-    output = ','.join(list(map(lambda x: "('" + x[0].split(".")[0] + "'," + str(x[1]) + ",'" + format2code[x[0].split(".")[1]] +  ")", areas)))
+    
+    output = ','.join(list(map(lambda x: "('" + x[0].split(".")[0] + "'," + str(x[1]) + "," + str(format2code[x[0].split(".")[1]]) +  ")", areas)))
     return output
 
 def compute_area(args, include_header = False):
@@ -128,7 +128,6 @@ def compute_area(args, include_header = False):
 if __name__ == "__main__":
 
     args = parse_args()
-    
     areas = compute_area(args, include_header = True)
 
     """ Save areas to csv """
