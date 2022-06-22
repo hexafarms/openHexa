@@ -61,7 +61,7 @@ def compute_area_api(images):
     hexa_base = hexa_img()
     """ mount segmentation model """
     hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT)
-
+    
     """ process images """
     for img in images:
         img_full_path =  os.path.join(IMGFILE_DIR, img)
@@ -69,8 +69,15 @@ def compute_area_api(images):
         hexa.load_img(filepath=img_full_path, metapath=METAPATH, separator=SEPARATOR)
         hexa.undistort().segment_with_model(show=False, pallete_path=None).compute_area().document(areas, graph=False, volume=False)
 
+    format2code = {
+        'jpg' : 1,
+        'png' : 2,
+        'jpeg' : 3,
+    } # It should be synced to postgresql DB (img_format)
+
     """ convert list to SQL format """
-    output = ',' .join(list(map(lambda x: "('" + x[0] + "'," + str(x[1]) +  ")", areas)))
+    breakpoint()
+    output = ','.join(list(map(lambda x: "('" + x[0].split(".")[0] + "'," + str(x[1]) + ",'" + format2code[x[0].split(".")[1]] +  ")", areas)))
     return output
 
 def compute_area(args, include_header = False):
