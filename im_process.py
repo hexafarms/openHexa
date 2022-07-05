@@ -50,7 +50,7 @@ def parse_args():
 
 
 def compute_area_api(images):
-    METAPATH = "/Hexa_image/data/images/hexa_meta.json"
+    METAPATH = "/Hexa_image/meta/hexa_meta.json"
     SEPARATOR = "-"
     IMGFILE_DIR = "/Hexa_image/data/images/pictures"
     CONFIG = "/weights/v2/config.py"
