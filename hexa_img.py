@@ -29,7 +29,6 @@ class hexa_img:
     count: int = 1 # the number of plants in the bench
     model: Any = None
 
-    # @property
     def load_img(self, filepath: str, metapath: str, separator):
         self.img = cv2.imread(str(filepath))
         assert type(self.img) != type(None), f"no file {filepath} exist!"
