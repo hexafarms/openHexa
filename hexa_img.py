@@ -551,12 +551,17 @@ def distort_quality_check(img: np.ndarray)->bool:
     h, w, _ = img.shape
     h_edge = h//40
     w_edge = w//40
-    
-    if img[:h_edge, w_edge].sum() + img[-h_edge:, -w_edge:].sum() + img[:h_edge, -w_edge:].sum() + img[-h_edge:, :w_edge].sum() == 0:
-        """ Undistortion failed """
-        logger.warning("Distortion has failed. Check the calibration process again.")
-        return False
 
-    else:
-        logger.success("Distortion is well done.")
-        return True
+    # TODO: develop appropriate algorithm to check if the distortion is properly done or not.
+
+    """ Before the proper algorithm is devleoped, always return True. (believe that distortion is successfully done. """
+    return True
+    
+    # if img[:h_edge, :w_edge].sum() + img[-h_edge:, -w_edge:].sum() + img[:h_edge, -w_edge:].sum() + img[-h_edge:, :w_edge].sum() == 0:
+    #     """ Undistortion failed """
+    #     logger.warning("Distortion has failed. Check the calibration process again.")
+    #     return False
+
+    # else:
+    #     logger.success("Distortion is well done.")
+    #     return True
