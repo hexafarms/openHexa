@@ -1,4 +1,4 @@
-![logo](demo/logo.jpg)
+![logo](demo/logo.png)
 
 # Hexafarms' image meta data arranger repo
 
