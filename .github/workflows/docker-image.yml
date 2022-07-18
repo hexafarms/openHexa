@@ -1,0 +1,21 @@
+name: Docker Image Build CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    # - name: Docker test
+    - name: Build_the_Docker_image
+      run: |
+        docker build docker --tag hexa-img-image:check
+      shell: bash
