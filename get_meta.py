@@ -1,9 +1,16 @@
+"""
+Compute meta data.
+
+Author: Huijo Kim
+Email: huijo.k@hexafarms
+Version: V1.0
+"""
 from hexa_img import hexa_process
 
 if __name__ == "__main__":
 
-    INPUT = "dev-6-1648310401.jpg"
-    PATHCHECKER = "checker"
+    INPUT = "checker/burbach-left-16569425.jpg"  # for px_ratio
+    PATHCHECKER = "checker"  # for calibration
     SEPARATOR = "-"
     METAPATH = "."
     CORNER_WIDTH = 9
