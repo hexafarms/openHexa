@@ -33,5 +33,5 @@ if __name__ == "__main__":
     
     area = compute_area_api(images, METAPATH=meta_path, IMGFILE_DIR=img_path)
     if area > 0:
-        print("Test is Successful!.")
+        print(f"Output: {area}. It is successfully tested!")
     
