@@ -9,9 +9,8 @@ import argparse
 import os
 import sys
 
-from im_process import compute_area_api
-
 sys.path.append(os.getcwd())
+from im_process import compute_area_api
 
 
 def parse_args():
