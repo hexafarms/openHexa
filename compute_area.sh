@@ -1,1 +1,0 @@
-echo "command is running."
