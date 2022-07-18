@@ -28,8 +28,8 @@ if __name__ == "__main__":
 
     args = parse_args()
     images = args.image
-    meta_path = "hexa_meta.json"
-    img_path = "demo/undistort_demo.jpg"
+    meta_path = "demo/hexa_meta_demo.json"
+    img_path = "demo"
     
     area = compute_area_api(images, METAPATH=meta_path, IMGFILE_DIR=img_path)
     if area > 0:
