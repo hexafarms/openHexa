@@ -71,7 +71,7 @@ camera_code may (or may not) contain "-" in the file name.
 </p>
 4. Plant Growth 
 <p float="left">
-  <img src="demo/growth_demo.png" width="800"/>
+  <img src="demo/growth-demo.png" width="800"/>
 </p>
 
 5. 3D reconstruction
