@@ -58,8 +58,8 @@ camera_code may (or may not) contain "-" in the file name.
 
 1. Image undistortion.
 <p float="left">
-  <img src="demo/distort_demo.jpg" width="400"/>
-  <img src="demo/undistort_demo.jpg" width="400"/>
+  <img src="demo/distort-demo.jpg" width="400"/>
+  <img src="demo/undistort-demo.jpg" width="400"/>
 </p>
 2. Compute ratio of pixel to cm 
 <p float="left">
