@@ -10,6 +10,7 @@ import csv
 import os
 from dataclasses import replace
 from pathlib import Path
+import re
 
 from loguru import logger
 
@@ -58,11 +59,30 @@ best_model/fcn_unet_s5-d16_128x128_320k_LeafDataset_T17.py",
     return args
 
 
-def compute_area_api(images, METAPATH="/Hexa_image/meta/hexa_meta.json", IMGFILE_DIR="/Hexa_image/data/images/pictures"):
+def compute_area_api(images, version=None, METAPATH="/Hexa_image/meta/hexa_meta.json", IMGFILE_DIR="/Hexa_image/data/images/pictures"):
     """Compute area for RESTapi."""
+
     SEPARATOR = "-"
-    CONFIG = "/weights/v2/config.py"
-    CHECKPOINT = "/weights/v2/weights.pth"
+
+    new_version = 0
+    versions = [os.path.basename(x[0]) for x in os.walk("/weights")][1:] # exclude the parent path
+
+    if version is None:
+        "Find the best version if not given"
+
+        if len(versions) == 0:
+            NameError("No proper version inside weight folder!")
+
+        for v in versions:
+            version = int(re.search('v(.*)', v).group(1))
+            if  version > new_version:
+                new_version = version 
+
+    else:
+        new_version = version[1:]
+
+    CONFIG = f"/weights/v{new_version}/config.py"
+    CHECKPOINT = f"/weights/v{new_version}/weights.pth"
 
     areas = []
 
