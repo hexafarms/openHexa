@@ -97,16 +97,21 @@ def compute_area_api(images, version=None, METAPATH="/Hexa_image/meta/hexa_meta.
         hexa.load_img(filepath=img_full_path, metapath=METAPATH, separator=SEPARATOR)
         hexa.undistort().segment_with_model(show=False, pallete_path=None).compute_area().document(areas, graph=False, volume=False)
 
-    format2code = {
-        'jpg': 1,
-        'png': 2,
-        'jpeg': 3,
-    }  # It should be synced to postgresql DB (img_format)
+    # format2code = {
+    #     'jpg': 1,
+    #     'png': 2,
+    #     'jpeg': 3,
+    # }  # It should be synced to postgresql DB (img_format)
 
     """ convert list to SQL format """
     
     output = ','.join(
-        list(map(lambda x: "('" + x[0].split(".")[0] + "'," + str(x[1]) + "," + str(format2code[x[0].split(".")[1]]) + ")", areas)))
+        list(
+            map(
+                lambda x: "('" + x[0].split(".")[0] + "'," + str(x[1]) + "," + f"'{x[0].split(".")[1]}'" + ")", areas
+                )
+            )
+        )
     return output
 
 
