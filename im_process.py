@@ -108,7 +108,7 @@ def compute_area_api(images, version=None, METAPATH="/Hexa_image/meta/hexa_meta.
     output = ','.join(
         list(
             map(
-                lambda x: "('" + x[0].split(".")[0] + "'," + str(x[1]) + "," + f"'{x[0].split(".")[1]}'" + ")", areas
+                lambda x: "('" + x[0].split(".")[0] + "'," + str(x[1]) + "," + f"'{x[0].split('.')[1]}'" + ")", areas
                 )
             )
         )
