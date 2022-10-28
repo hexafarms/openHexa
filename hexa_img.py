@@ -36,7 +36,7 @@ class hexa_img:
     pallete: np.ndarray = None
     name: str = None
     param: Optional[Dict[str, int]] = None  # camera parameter
-    ratio: Optional[float] = 0  # mm2 per pixel
+    ratio: Optional[float] = 0.3  # mm2 per pixel, 0.3 is average at 40cm height
     area: Optional[float] = 0
     volume: Optional[float] = 0
     count: int = 1  # the number of plants in the bench
@@ -78,9 +78,8 @@ class hexa_img:
             self.ratio = data[camera_code]["pixel2mm"]
         else:
             logger.warning(
-                f"ratio of pixel to mm2 of {filepath} don't exist in {metapath}. area will be in pixel level."
+                f"ratio of pixel to mm2 of {filepath} don't exist in {metapath}. Area will be in 0.3 mm^2 per pixel."
             )
-            self.ratio = 1
         return self
 
     def remove(self, points: List):
@@ -276,11 +275,6 @@ class hexa_img:
 
         assert self.count != 0, "There is no plants in the image."
 
-        if not self.ratio:
-            logger.warning(
-                "No ratio between pixel to dimension. Output unit is in pixel."
-            )
-            self.ratio = 1
         volume = (
             2
             / 3
