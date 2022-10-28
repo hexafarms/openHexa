@@ -31,14 +31,14 @@ camera_code may (or may not) contain "-" in the file name.
     hexa.undistort()
     ```
     `IMGFILE: image to undistort, METAPATH: Location of meta data, SEPARATOR: delimiter`
-3. Compute ratio of pixel to cm  (save in meta)
+3. Compute ratio of pixel to mm  (save in meta)
     ```
     hexa = hexa_process()
     hexa.compute_px_ratio(filepath=INPUT, metapath=METAPATH, separator=SEPARATOR, actual_dim=ACTUAL_DIM)
     ```
     `INPUT: image file, METAPATH: Directory to save meta data, SEPARATOR: delimiter, ACTUAL_DIM: actual diameter of circle`
 
-4. Estimate the actual area of plants using segmentation mask and pixel to cm
+4. Estimate the actual area of plants using segmentation mask and pixel to mm
     ```
     hexa.undistort().segment(config_file=CONFIG,checkpoint_file=CHECKPOINT, show = True, pallete_path=".").compute_area()
     ```
@@ -61,7 +61,7 @@ camera_code may (or may not) contain "-" in the file name.
   <img src="demo/distort-demo.jpg" width="400"/>
   <img src="demo/undistort-demo.jpg" width="400"/>
 </p>
-2. Compute ratio of pixel to cm 
+2. Compute ratio of pixel to mm 
 <p float="left">
   <img src="demo/pixelratio.png" width="800"/>
 </p>

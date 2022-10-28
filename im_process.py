@@ -11,6 +11,7 @@ import os
 from dataclasses import replace
 from pathlib import Path
 import re
+from typing import List
 
 from loguru import logger
 
@@ -19,53 +20,61 @@ from hexa_img import hexa_img
 
 def parse_args():
     """Parse input arguments."""
-    parser = argparse.ArgumentParser(
-        description="Get Camera Calibration Parameters")
+    parser = argparse.ArgumentParser(description="Get Camera Calibration Parameters")
 
-    parser.add_argument("--img_dir",
-                        default="images",
-                        help="Location of raw images' directory or an image file.")
+    parser.add_argument(
+        "--img_dir",
+        default="images",
+        help="Location of raw images' directory or an image file.",
+    )
 
-    parser.add_argument("--meta",
-                        default="hexa_meta.json",
-                        help="Location of meta file.")
+    parser.add_argument(
+        "--meta", default="hexa_meta.json", help="Location of meta file."
+    )
 
-    parser.add_argument("--config",
-                        default="/home/hexaburbach/codes/mmsegmentation/fast_api/\
+    parser.add_argument(
+        "--config",
+        default="/home/hexaburbach/codes/mmsegmentation/fast_api/\
 best_model/fcn_unet_s5-d16_128x128_320k_LeafDataset_T17.py",
-                        help="Location of segmentation config file")
+        help="Location of segmentation config file",
+    )
 
-    parser.add_argument("--weight",
-                        default="/home/hexaburbach/codes/mmsegmentation/fast_api/best_model/iter_320000.pth",
-                        help="Location of segmentation weight file")
+    parser.add_argument(
+        "--weight",
+        default="/home/hexaburbach/codes/mmsegmentation/fast_api/best_model/iter_320000.pth",
+        help="Location of segmentation weight file",
+    )
 
-    parser.add_argument("--csv",
-                        default="output.csv",
-                        help="Location of output to save csv file")
+    parser.add_argument(
+        "--csv", default="output.csv", help="Location of output to save csv file"
+    )
 
-    parser.add_argument("--out",
-                        default="output",
-                        help="Location of output to save segmented images")
+    parser.add_argument(
+        "--out", default="output", help="Location of output to save segmented images"
+    )
 
-    parser.add_argument("--separator",
-                        default="-",
-                        help="Separation key word")
+    parser.add_argument("--separator", default="-", help="Separation key word")
 
-    parser.add_argument("--remove",
-                        default=False,
-                        help="remove irrelvant reigion.")
-            
+    parser.add_argument("--remove", default=False, help="remove irrelvant reigion.")
+
     args = parser.parse_args()
     return args
 
 
-def compute_area_api(images, version=None, METAPATH="/Hexa_image/meta/hexa_meta.json", IMGFILE_DIR="/Hexa_image/data/images/pictures"):
+def compute_area_api(
+    images: List,
+    version: str = None,
+    METAPATH: str = "/Hexa_image/meta/hexa_meta.json",
+    IMGFILE_DIR: str = "/Hexa_image/data/images/pictures",
+) -> str:
     """Compute area for RESTapi."""
 
     SEPARATOR = "-"
 
     new_version = 0
-    versions = [os.path.basename(x[0]) for x in os.walk("/weights")][1:] # exclude the parent path
+    versions = [os.path.basename(x[0]) for x in os.walk("/weights")][
+        1:
+    ]  # exclude the parent path
 
     if version is None:
         "Find the best version if not given"
@@ -74,9 +83,9 @@ def compute_area_api(images, version=None, METAPATH="/Hexa_image/meta/hexa_meta.
             NameError("No proper version inside weight folder!")
 
         for v in versions:
-            version = int(re.search('v(.*)', v).group(1))
-            if  version > new_version:
-                new_version = version 
+            version = int(re.search("v(.*)", v).group(1))
+            if version > new_version:
+                new_version = version
 
     else:
         new_version = version[1:]
@@ -89,29 +98,31 @@ def compute_area_api(images, version=None, METAPATH="/Hexa_image/meta/hexa_meta.
     hexa_base = hexa_img()
     """ mount segmentation model """
     hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT)
-    
+
     """ process images """
     for img in images:
         img_full_path = os.path.join(IMGFILE_DIR, img)
         hexa = replace(hexa_base)
         hexa.load_img(filepath=img_full_path, metapath=METAPATH, separator=SEPARATOR)
-        hexa.undistort().segment_with_model(show=False, pallete_path=None).compute_area().document(areas, graph=False, volume=False)
-
-    # format2code = {
-    #     'jpg': 1,
-    #     'png': 2,
-    #     'jpeg': 3,
-    # }  # It should be synced to postgresql DB (img_format)
+        hexa.undistort().segment_with_model(
+            show=False, pallete_path=None
+        ).compute_area().document(areas, graph=False, volume=False)
 
     """ convert list to SQL format """
-    
-    output = ','.join(
+    output = ",".join(
         list(
             map(
-                lambda x: "('" + x[0].split(".")[0] + "'," + str(x[1]) + "," + f"'{x[0].split('.')[1]}'" + ")", areas
-                )
+                lambda x: "('"
+                + x[0].split(".")[0]
+                + "',"
+                + str(x[1])
+                + ","
+                + f"'{x[0].split('.')[1]}'"
+                + ")",
+                areas,
             )
         )
+    )
     return output
 
 
@@ -124,24 +135,33 @@ def compute_area(args, include_header=False):
     CHECKPOINT = args.weight
     OUTIMG = args.out
     REMOVE = args.remove
-    REMOVE = [[[400, 0], [0, 400]], [['end', 100], [1100, 'end']], [[150, 'end'], [0, 550]]]
+    REMOVE = [
+        [[400, 0], [0, 400]],
+        [["end", 100], [1100, "end"]],
+        [[150, "end"], [0, 550]],
+    ]
 
     img_ext = (".jpg", ".JPG", ".png", ".PNG", ".jpeg", ".JPEG")
     if include_header:
-        areas = [["file_name", "area_cm2", "volume_cm3"]]
+        areas = [["file_name", "area_mm2", "volume_mm3"]]
     else:
         areas = []
     count_plants = 0
 
     img_path = Path(IMGFILE_DIR)
     if img_path.is_dir():
-        imgs = sorted(filter(lambda path: path.suffix in img_ext, img_path.glob("*")), key=lambda path: str(path))
+        imgs = sorted(
+            filter(lambda path: path.suffix in img_ext, img_path.glob("*")),
+            key=lambda path: str(path),
+        )
 
     elif img_path.is_file():
         if img_path.suffix in img_ext:
             imgs = [img_path.__str__()]
         else:
-            logger.warning(f"Wrong suffix! Current suffix is {img_path.suffix}, not in {img_ext}.")
+            logger.warning(
+                f"Wrong suffix! Current suffix is {img_path.suffix}, not in {img_ext}."
+            )
     else:
         logger.warning("Wrong input format. Check your input argument.")
 
@@ -156,7 +176,9 @@ def compute_area(args, include_header=False):
         hexa.load_img(filepath=img, metapath=METAPATH, separator=SEPARATOR)
         if REMOVE:
             hexa.remove(REMOVE)
-        hexa.undistort().segment_with_model(show=True, pallete_path=OUTIMG).compute_area().document(areas, graph=False)
+        hexa.undistort().segment_with_model(
+            show=True, pallete_path=OUTIMG
+        ).compute_area().document(areas, graph=False)
         count_plants = hexa.count
 
     return areas
