@@ -10,7 +10,7 @@ import os
 import sys
 
 sys.path.append(os.getcwd())
-from im_process import compute_area_api
+from im_process import compute_area_raw_api
 
 
 def parse_args():
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     args = parse_args()
     images = args.image
     
-    area = compute_area_api(images)
+    area = compute_area_raw_api(images)
     
     print({"input_args: ": args.image})
     print({"return value: ": area})
