@@ -125,6 +125,54 @@ def compute_area_api(
     )
     return output
 
+def compute_area_raw_api(
+    images: List,
+    version: str = None,
+    METAPATH: str = "/Hexa_image/meta/hexa_meta.json",
+    IMGFILE_DIR: str = "/Hexa_image/data/images/pictures",
+) -> str:
+    """Compute area for RESTapi, output format is the raw list."""
+
+    SEPARATOR = "-"
+
+    new_version = 0
+    versions = [os.path.basename(x[0]) for x in os.walk("/weights")][
+        1:
+    ]  # exclude the parent path
+
+    if version is None:
+        "Find the best version if not given"
+
+        if len(versions) == 0:
+            NameError("No proper version inside weight folder!")
+
+        for v in versions:
+            version = int(re.search("v(.*)", v).group(1))
+            if version > new_version:
+                new_version = version
+
+    else:
+        new_version = version[1:]
+
+    CONFIG = f"/weights/v{new_version}/config.py"
+    CHECKPOINT = f"/weights/v{new_version}/weights.pth"
+
+    areas = []
+
+    hexa_base = hexa_img()
+    """ mount segmentation model """
+    hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT)
+
+    """ process images """
+    for img in images:
+        img_full_path = os.path.join(IMGFILE_DIR, img)
+        hexa = replace(hexa_base)
+        hexa.load_img(filepath=img_full_path, metapath=METAPATH, separator=SEPARATOR)
+        hexa.undistort().segment_with_model(
+            show=False, pallete_path=None
+        ).compute_area().document(areas, graph=False, volume=False)
+
+    return areas
 
 def compute_area(args, include_header=False):
     """Compute area for python module."""
