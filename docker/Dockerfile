@@ -1,7 +1,7 @@
-ARG PYTORCH="1.10.0"
+ARG PYTORCH="1.12.1"
 ARG CUDA="11.3"
 ARG CUDNN="8"
-ARG MMCV="1.3.17"
+ARG MMCV="1.6.1"
 
 FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-devel
 
@@ -17,28 +17,16 @@ RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/
 
 RUN conda clean --all
 
-# Install MMCV
-ARG PYTORCH
-ARG CUDA
-ARG MMCV
-RUN ["/bin/bash", "-c", "pip install mmcv-full==${MMCV} -f https://download.openmmlab.com/mmcv/dist/cu${CUDA//./}/torch${PYTORCH}/index.html"]
+# ENV FORCE_CUDA="1"
+# ARG DEPLOY_STAMP=unknown
+# Install MMCV, MMseg, MMdet
+RUN pip install -U openmim && mim install mmcv-full && pip install mmsegmentation==0.29.1 mmdet==2.26.0
 
-# Install MMSegmentation
-ARG DEPLOY_STAMP=unknown
 
-RUN git clone https://github.com/HexaFarms/MMsegmentation.git /mmsegmentation
-WORKDIR /mmsegmentation
-RUN git fetch
-RUN git checkout master
-ENV FORCE_CUDA="1"
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-
-RUN cd ..
-RUN git clone https://github.com/HexaFarms/Hexa_image.git /Hexa_image
-RUN mkdir -p /Hexa_image/data/images/pictures
-WORKDIR /Hexa_image
-RUN pip install -r requirements.txt
+RUN git clone https://github.com/hexafarms/openHexa.git /openHexa
+RUN mkdir -p /openHexa/data/images/pictures
+WORKDIR /openHexa
+RUN pip install -r requirements/fastAPI.txt
 
 # RUN mkdir -p fast_api/input/
 # CMD ["uvicorn", "fast_api:app", "--host", "0.0.0.0", "--port", "8000"]

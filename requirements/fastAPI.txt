@@ -1,7 +1,6 @@
-loguru==0.6.0
-matplotlib==3.6.1
-numpy==1.23.3
-numpyencoder==0.3.0
+loguru
+numpy
+numpyencoder
 opencv-python==4.6.0.66
 fastapi
 uvicorn
