@@ -1,0 +1,8 @@
+loguru==0.6.0
+matplotlib==3.6.1
+numpy==1.23.3
+numpyencoder==0.3.0
+opencv-python==4.6.0.66
+pandas
+seaborn
+torch==1.13.0 # python version 3.8 and 3.9 are recommended. (error with version >=3.10)
