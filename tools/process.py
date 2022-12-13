@@ -6,7 +6,6 @@ Email: huijo.k@hexafarms
 Version: V1.0
 """
 import argparse
-import csv
 import os
 from dataclasses import replace
 from pathlib import Path
@@ -15,7 +14,7 @@ from typing import List
 
 from loguru import logger
 
-from hexa_img import hexa_img
+from openHexa.imgInstance import hexa_img
 
 
 def parse_args():
@@ -62,22 +61,24 @@ best_model/fcn_unet_s5-d16_128x128_320k_LeafDataset_T17.py",
 
 
 def compute_area_api(
-    images: List,
+    images: List[str],
     version: str = None,
     METAPATH: str = "/Hexa_image/meta/hexa_meta.json",
     IMGFILE_DIR: str = "/Hexa_image/data/images/pictures",
+    mode: str = "mmseg",
 ) -> str:
     """Compute area for RESTapi."""
 
     SEPARATOR = "-"
 
-    new_version = 0
-    versions = [os.path.basename(x[0]) for x in os.walk("/weights")][
-        1:
-    ]  # exclude the parent path
+    assert mode in ["mmseg", "mmdet"], f"Mode is unknwon. Given value: {mode}"
 
     if version is None:
         "Find the best version if not given"
+        new_version = 0
+        versions = [os.path.basename(x[0]) for x in os.walk("/weights")][
+            1:
+        ]  # exclude the parent path
 
         if len(versions) == 0:
             NameError("No proper version inside weight folder!")
@@ -90,14 +91,14 @@ def compute_area_api(
     else:
         new_version = version[1:]
 
-    CONFIG = f"/weights/v{new_version}/config.py"
-    CHECKPOINT = f"/weights/v{new_version}/weights.pth"
+    CONFIG = f"/weights/{mode}/v{new_version}/config.py"
+    CHECKPOINT = f"/weights/{mode}/v{new_version}/weights.pth"
 
-    areas = []
+    output = {}
 
     hexa_base = hexa_img()
     """ mount segmentation model """
-    hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT)
+    hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT, mode=mode)
 
     """ process images """
     for img in images:
@@ -106,34 +107,21 @@ def compute_area_api(
         hexa.load_img(filepath=img_full_path, metapath=METAPATH, separator=SEPARATOR)
         hexa.undistort().segment_with_model(
             show=False, pallete_path=None
-        ).compute_area().document(areas, graph=False, volume=False)
+        ).compute_area().document(output)
 
-    """ convert list to SQL format """
-    output = ",".join(
-        list(
-            map(
-                lambda x: "('"
-                + x[0].split(".")[0]
-                + "',"
-                + str(x[1])
-                + ","
-                + f"'{x[0].split('.')[1]}'"
-                + ")",
-                areas,
-            )
-        )
-    )
     return output
+
 
 def compute_area_raw_api(
     images: List,
     version: str = None,
-    METAPATH: str = "/Hexa_image/meta/hexa_meta.json",
-    IMGFILE_DIR: str = "/Hexa_image/data/images/pictures",
+    METAPATH: str = "/openHexa/meta/hexa_meta.json",
+    IMGFILE_DIR: str = "/openHexa/data/images/pictures",
 ) -> str:
     """Compute area for RESTapi, output format is the raw list."""
 
     SEPARATOR = "-"
+    # TODO get rid of meta file part (especially, pixel ratio part)
 
     new_version = 0
     versions = [os.path.basename(x[0]) for x in os.walk("/weights")][
@@ -173,6 +161,7 @@ def compute_area_raw_api(
         ).compute_area().document(areas, graph=False, volume=False)
 
     return areas
+
 
 def compute_area(args, include_header=False):
     """Compute area for python module."""
@@ -234,10 +223,21 @@ def compute_area(args, include_header=False):
 
 if __name__ == "__main__":
 
-    args = parse_args()
-    areas = compute_area(args, include_header=True)
+    images = [
+        "ecf_G8T1-K001-2173-0FSR-1668034800.jpg",
+    ]
+    METAPATH = "/home/huijo/codes/hexa_img_meta/data/meta/hexa_meta.json"
+    IMGFILE_DIR = "/home/huijo/Downloads"
+    mode = "mmdet"
 
-    """ Save areas to csv """
-    with open(args.csv, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerows(areas)
+    compute_area_api(
+        images=images, METAPATH=METAPATH, IMGFILE_DIR=IMGFILE_DIR, mode=mode
+    )
+
+    # args = parse_args()
+    # areas = compute_area(args, include_header=True)
+
+    # """ Save areas to csv """
+    # with open(args.csv, "w", newline="") as f:
+    #     writer = csv.writer(f)
+    #     writer.writerows(areas)
