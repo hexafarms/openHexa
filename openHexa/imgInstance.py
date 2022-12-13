@@ -14,7 +14,7 @@ from pathlib import Path
 # This is for airflow api to connect into mmseg
 from dataclasses import dataclass
 from json.decoder import JSONDecodeError
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 from time import gmtime, strftime
 
 # external library for image processing.
@@ -33,7 +33,7 @@ class hexa_img:
     """Image format handling Computer Vision task."""
 
     img: np.ndarray = None
-    mask: np.ndarray | List[np.ndarray] = None
+    mask: Union[np.ndarray, List[np.ndarray]] = None
     pallete: np.ndarray = None
     name: str = None
     param: Optional[Dict[str, int]] = None  # camera parameter
