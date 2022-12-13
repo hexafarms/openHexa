@@ -7,6 +7,7 @@ from pathlib import Path
 from openHexa.utils.helpers import getNewVersion
 from tools.process import compute_area_api
 from configs.aws import prepare_configs
+import glob
 
 app = FastAPI()
 
@@ -45,7 +46,9 @@ async def sync_instantSeg(location: str):
     imgDir = os.path.join("/images", location)
     Path(imgDir).mkdir(parents=True, exist_ok=True)
 
-    imgsInS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=location)['Contents']])
+    imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=location)['Contents']])
+    imgsDB = set(['Get list of image files in read-only permission.'])
+    imgsLocal = set(glob.glob(os.path.join(imgDir, '*.jpg'))) + set(glob.glob(os.path.join(imgDir, '*.png')))
 
     # TODO: get files names from S3
     # TODO: get file names at the location from RDS (uhm... should I include RDS here???)
@@ -54,7 +57,7 @@ async def sync_instantSeg(location: str):
     # Maybe in this repo, only read permission to DB is awarded, and send the area info to Airflow? Then it can be micro-controlled, and safe!.
 
 
-    imgs = [] # should be computed
+    imgs = imgsS3 - imgsDB - imgsLocal
 
     areas = compute_area_api(
         imgs, newVersion, METAPATH = "/meta/hexa_meta.json", IMGFILE_DIR= imgDir, mode= mode)

@@ -5,6 +5,7 @@ ARG MMCV="1.6.1"
 
 FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-devel
 
+USER root
 ENV TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0+PTX"
 ENV TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
 ENV CMAKE_PREFIX_PATH="$(dirname $(which conda))/../"
@@ -20,13 +21,24 @@ RUN conda clean --all
 # ENV FORCE_CUDA="1"
 # ARG DEPLOY_STAMP=unknown
 # Install MMCV, MMseg, MMdet
-RUN pip install -U openmim && mim install mmcv-full && pip install mmsegmentation==0.29.1 mmdet==2.26.0
-
-
 RUN git clone https://github.com/hexafarms/openHexa.git /openHexa
-RUN mkdir -p /openHexa/data/images/pictures
 WORKDIR /openHexa
+
+RUN adduser --system hexa 
+USER hexa
+
+ARG PYTORCH
+ARG CUDA
+ARG MMCV
+RUN ["/bin/bash", "-c", "pip install mmcv-full==${MMCV} -f https://download.openmmlab.com/mmcv/dist/cu${CUDA//./}/torch${PYTORCH}/index.html"]
+
 RUN pip install -r requirements/fastAPI.txt
 
-# RUN mkdir -p fast_api/input/
-# CMD ["uvicorn", "fast_api:app", "--host", "0.0.0.0", "--port", "8000"]
+USER root
+RUN mkdir /openHexa/images
+RUN mkdir /openHexa/weights
+RUN mkdir /openHexa/meta
+
+RUN chown -R hexa /openHexa 
+
+USER hexa
