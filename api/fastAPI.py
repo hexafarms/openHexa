@@ -33,7 +33,7 @@ async def sync_instantSeg(location: str):
 
     mode = "mmdet"
 
-    weightDir = os.path.join("/weights", mode)
+    weightDir = os.path.join("/openHexa/weights", mode)
 
     # Download config, weight, meta file, and return S3 client.
     s3_client=prepare_configs(mode)
@@ -43,18 +43,18 @@ async def sync_instantSeg(location: str):
     config_file = os.path.join(weightDir, f"v{str(newVersion)}", "config.py")
     checkpoint_file = os.path.join(weightDir, f"v{str(newVersion)}", "weights.pth")
 
-    imgDir = os.path.join("/images", location)
+    imgDir = os.path.join("/openHexa/images", location)
     Path(imgDir).mkdir(parents=True, exist_ok=True)
 
-    imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=location)['Contents']]) # w/ ext
+    imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=location)['Contents']])
     imgsDB = getFiles(
         sql= f"SELECT top_view.file_name, img_format.format FROM top_view \
             JOIN img_format \
             ON img_format.img_format_id = top_view.img_format \
             WHERE top_view.location = \
             (SELECT location_id from locations WHERE location='{location}');"
-        ) # w/o ext
-    imgsLocal = set(glob.glob(os.path.join(imgDir, '*.jpg'))) + set(glob.glob(os.path.join(imgDir, '*.png'))) # w/ ext
+        ) 
+    imgsLocal = set(glob.glob(os.path.join(imgDir, '*.jpg'))) + set(glob.glob(os.path.join(imgDir, '*.png')))
 
     #TODO: DB has not ext, but other has.
 
@@ -67,7 +67,7 @@ async def sync_instantSeg(location: str):
     imgs2Update = imgsLocal - imgsDB
 
     areas = compute_area_api(
-        list(imgs2Update), newVersion, METAPATH = "/meta/hexa_meta.json", IMGFILE_DIR= imgDir, mode= mode)
+        list(imgs2Update), newVersion, METAPATH = "/openHexa/meta/hexa_meta.json", IMGFILE_DIR= imgDir, mode= mode)
     
     return ORJSONResponse(areas)
     
