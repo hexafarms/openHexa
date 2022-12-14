@@ -63,8 +63,8 @@ best_model/fcn_unet_s5-d16_128x128_320k_LeafDataset_T17.py",
 def compute_area_api(
     images: List[str],
     version: str = None,
-    METAPATH: str = "/Hexa_image/meta/hexa_meta.json",
-    IMGFILE_DIR: str = "/Hexa_image/data/images/pictures",
+    METAPATH: str = "/openHexa/meta/hexa_meta.json",
+    IMGFILE_DIR: str = "/openHexa/images",
     mode: str = "mmseg",
 ) -> str:
     """Compute area for RESTapi."""

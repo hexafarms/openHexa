@@ -36,6 +36,7 @@ async def sync_instantSeg(location: str):
     weightDir = os.path.join("/openHexa/weights", mode)
 
     # Download config, weight, meta file, and return S3 client.
+    
     s3_client=prepare_configs(mode)
     
     newVersion = getNewVersion(weightDir)

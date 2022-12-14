@@ -11,13 +11,6 @@ import psycopg2
 def _connect_aws_s3(AWS_KEY: str, AWS_SECRET: str, AWS_REGION: str):
     """Connect to aws client"""
 
-    # Get credentials to access to S3 bucket.
-    f = open("/run/secrets/aws")
-    secret = json.load(f)
-    AWS_KEY = secret["AWS_KEY"]
-    AWS_SECRET = secret["AWS_SECRET"]
-    AWS_REGION = secret["AWS_REGION"]
-
     s3_client = boto3.client(
         "s3",
         region_name=AWS_REGION,
@@ -45,7 +38,11 @@ def prepare_configs(cv_mode: str):
 
     assert cv_mode in ["mmseg", "mmdet"], f"Mode is inappropriate. Input: {cv_mode}"
 
-    s3_client = _connect_aws_s3()
+    # Get credentials to access to S3 bucket.
+    f = open("/run/secrets/aws")
+    secret = json.load(f)
+
+    s3_client = _connect_aws_s3(secret["AWS_KEY"], secret["AWS_SECRET"], secret["AWS_REGION"])
 
     "Check the bucket is inside AWS S3"
     blink_bucket_name = _check_bucket(s3_client, "configs-and-weights")
