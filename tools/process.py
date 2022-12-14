@@ -62,9 +62,9 @@ best_model/fcn_unet_s5-d16_128x128_320k_LeafDataset_T17.py",
 
 def compute_area_api(
     images: List[str],
-    version: str = None,
-    METAPATH: str = "/openHexa/meta/hexa_meta.json",
-    IMGFILE_DIR: str = "/openHexa/images",
+    version: int,
+    METAPATH: str ,
+    IMGFILE_DIR: str,
     mode: str = "mmseg",
 ) -> str:
     """Compute area for RESTapi."""
@@ -73,26 +73,8 @@ def compute_area_api(
 
     assert mode in ["mmseg", "mmdet"], f"Mode is unknwon. Given value: {mode}"
 
-    if version is None:
-        "Find the best version if not given"
-        new_version = 0
-        versions = [os.path.basename(x[0]) for x in os.walk("/weights")][
-            1:
-        ]  # exclude the parent path
-
-        if len(versions) == 0:
-            NameError("No proper version inside weight folder!")
-
-        for v in versions:
-            version = int(re.search("v(.*)", v).group(1))
-            if version > new_version:
-                new_version = version
-
-    else:
-        new_version = version[1:]
-
-    CONFIG = f"/weights/{mode}/v{new_version}/config.py"
-    CHECKPOINT = f"/weights/{mode}/v{new_version}/weights.pth"
+    CONFIG = f"/weights/{mode}/v{version}/config.py"
+    CHECKPOINT = f"/weights/{mode}/v{version}/weights.pth"
 
     output = {}
 
