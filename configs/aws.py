@@ -4,15 +4,19 @@ from loguru import logger
 import os
 from pathlib import Path
 from typing import Dict
+import json
+import psycopg2
 
 
 def _connect_aws_s3(AWS_KEY: str, AWS_SECRET: str, AWS_REGION: str):
     """Connect to aws client"""
 
     # Get credentials to access to S3 bucket.
-    AWS_KEY = os.environ["AWS_KEY"]
-    AWS_SECRET = os.environ["AWS_SECRET"]
-    AWS_REGION = os.environ["AWS_REGION"]
+    f = open("/run/secrets/aws")
+    secret = json.load(f)
+    AWS_KEY = secret["AWS_KEY"]
+    AWS_SECRET = secret["AWS_SECRET"]
+    AWS_REGION = secret["AWS_REGION"]
 
     s3_client = boto3.client(
         "s3",
@@ -88,3 +92,21 @@ def prepare_configs(cv_mode: str):
         logger.info("Weights file for image segmentation is downloaded.")
 
     return s3_client
+
+def getFiles(sql: str):
+    """Get file name accessing DB."""
+
+    # Get credentials to access to S3 bucket.
+    f = open("/run/secrets/db")
+    secret = json.load(f)
+
+    # TODO: add secret for it
+    conn = psycopg2.connect(
+        f"dbname={secret['DB']} user={secret['USR']} host={secret['HOST']} password={secret['PW']}"
+    )
+    conn.set_session(autocommit=True, readonly=True)
+    cur = conn.cursor()
+    cur.execute(sql)
+
+    #return set of file name.ext (i.e. hexa-1717.jpg )
+    return ['.'.join(i) for i in cur.fetchall()]

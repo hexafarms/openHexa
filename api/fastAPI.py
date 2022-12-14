@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from openHexa.utils.helpers import getNewVersion
 from tools.process import compute_area_api
-from configs.aws import prepare_configs
+from configs.aws import prepare_configs, getFiles
 import glob
 
 app = FastAPI()
@@ -35,7 +35,7 @@ async def sync_instantSeg(location: str):
 
     weightDir = os.path.join("/weights", mode)
 
-    # Download config, weight, meta file.
+    # Download config, weight, meta file, and return S3 client.
     s3_client=prepare_configs(mode)
     
     newVersion = getNewVersion(weightDir)
@@ -46,21 +46,28 @@ async def sync_instantSeg(location: str):
     imgDir = os.path.join("/images", location)
     Path(imgDir).mkdir(parents=True, exist_ok=True)
 
-    imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=location)['Contents']])
-    imgsDB = set(['Get list of image files in read-only permission.'])
-    imgsLocal = set(glob.glob(os.path.join(imgDir, '*.jpg'))) + set(glob.glob(os.path.join(imgDir, '*.png')))
+    imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=location)['Contents']]) # w/ ext
+    imgsDB = getFiles(
+        sql= f"SELECT top_view.file_name, img_format.format FROM top_view \
+            JOIN img_format \
+            ON img_format.img_format_id = top_view.img_format \
+            WHERE top_view.location = \
+            (SELECT location_id from locations WHERE location='{location}');"
+        ) # w/o ext
+    imgsLocal = set(glob.glob(os.path.join(imgDir, '*.jpg'))) + set(glob.glob(os.path.join(imgDir, '*.png'))) # w/ ext
 
-    # TODO: get files names from S3
-    # TODO: get file names at the location from RDS (uhm... should I include RDS here???)
-    # TODO: S3 - RDS - local => Download to local
-    # TODO: Compute areas of files, and then update to RDS (or return to Airflow..??? is it safe??)
-    # Maybe in this repo, only read permission to DB is awarded, and send the area info to Airflow? Then it can be micro-controlled, and safe!.
+    #TODO: DB has not ext, but other has.
 
+    imgs2Download = list(imgsS3 - imgsDB - imgsLocal)
+    bucket = f"blink-{location}"
 
-    imgs = imgsS3 - imgsDB - imgsLocal
+    for file in imgs2Download:
+        s3_client.download_file(bucket, file, os.path.join(imgDir, location, file))
+
+    imgs2Update = imgsLocal - imgsDB
 
     areas = compute_area_api(
-        imgs, newVersion, METAPATH = "/meta/hexa_meta.json", IMGFILE_DIR= imgDir, mode= mode)
+        list(imgs2Update), newVersion, METAPATH = "/meta/hexa_meta.json", IMGFILE_DIR= imgDir, mode= mode)
     
     return ORJSONResponse(areas)
     
