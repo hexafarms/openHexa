@@ -33,7 +33,7 @@ def _check_bucket(s3_client, bucket_name):
     return bucket
 
 
-def prepare_configs(cv_mode: str):
+def prepare_configs(cv_mode: str, weightDir: str):
     """Prepare configs for segmentation."""
 
     assert cv_mode in ["mmseg", "mmdet"], f"Mode is inappropriate. Input: {cv_mode}"
@@ -63,8 +63,8 @@ def prepare_configs(cv_mode: str):
     up2date_config_v = f"v{new_version}"
 
     """Check if configs and weights are in volumes"""
-    config_file_path = os.path.join("/weights", cv_mode, up2date_config_v, "config.py")
-    weights_path = os.path.join("/weights", cv_mode, up2date_config_v, "weights.pth")
+    config_file_path = os.path.join(weightDir, up2date_config_v, "config.py")
+    weights_path = os.path.join(weightDir, up2date_config_v, "weights.pth")
     Path(config_file_path).parents[0].mkdir(parents=True, exist_ok=True)
 
     meta_path = os.path.join("/meta", "hexa_meta.json")

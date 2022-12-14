@@ -37,7 +37,7 @@ async def sync_instantSeg(location: str):
 
     # Download config, weight, meta file, and return S3 client.
     
-    s3_client=prepare_configs(mode)
+    s3_client=prepare_configs(mode, weightDir)
     
     newVersion = getNewVersion(weightDir)
 
