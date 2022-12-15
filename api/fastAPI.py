@@ -26,7 +26,7 @@ app.add_middleware(
 def read_root():
     return {"openHexa": "V1"}
 
-@app.get("/instantsegShow")
+@app.post("/instantsegShow")
 async def show_instantSeg(file: UploadFile = File(...), version: Union[str, None] = None):
 
     mode = "mmdet"
@@ -37,20 +37,20 @@ async def show_instantSeg(file: UploadFile = File(...), version: Union[str, None
     
     newVersion = getNewVersion(weightDir, version)
 
-    imgDir = os.path.join("/openHexa/images/visualize", file.filename)
-    Path(imgDir).mkdir(parents=True, exist_ok=True)
+
+    imgDir = file.filename
 
     with open(imgDir, "wb+") as file_object:
         file_object.write(file.file.read())
 
     pallete = segment(
-        imgDir, newVersion, IMGFILE_DIR= imgDir, mode= mode)
+        imgDir, newVersion, IMGFILE_DIR= "/openHexa", mode= mode)
 
     bytes_image = io.BytesIO()
     im = Image.fromarray(pallete)
     im.save(bytes_image, format="PNG")
     
-    return Response(content=bytes_image.getvalue(), headers={'Process Done':file.filename}, media_type=("image/jpeg"or"image/png"or"image/jpg"))
+    return Response(content=bytes_image.getvalue(), headers={'processDone':file.filename}, media_type=("image/jpeg"or"image/png"or"image/jpg"))
     
 
 @app.get("/instantseg")
