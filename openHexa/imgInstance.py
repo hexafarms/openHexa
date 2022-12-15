@@ -44,46 +44,51 @@ class hexa_img:
     model: Any = None
     cv_mode: str = None
 
-    def load_img(self, filepath: str, metapath: str, separator):
+    def load_img(self, filepath: str, metapath = None):
         """Load image."""
         self.img = cv2.imread(str(filepath))
         assert type(self.img) != type(None), f"no file {filepath} exist!"
 
         self.name = os.path.basename(filepath)
 
-        # load meta data
-        with open(metapath, "r+") as j:
-            try:
-                data = json.load(j)
-            except JSONDecodeError:
-                logger.warning(
-                    "Json file should not be empty. Delete the empty file and run again."
-                )
-                return 0
-        # check if the value is inside meta.
-        camRegex = re.compile(r"\w\w\w\w-\w\w\w\w-\w\w\w\w-\w\w\w\w")
-        camera_code = camRegex.search(filepath)[0]
-
-        if camera_code not in data.keys():
-            logger.warning("no camera info in meta data.")
+        if metapath is None:
+            logger.info("It is the raw-mode. No camera undistortion and adjust area.")
             return self
 
-        if "parameters" in data[camera_code].keys():
-            logger.success(f"parameters of {filepath} is loaded.")
-            self.param = data[camera_code]["parameters"]
         else:
-            logger.warning(
-                f"parameters of {filepath} don't exist in {metapath}. no undistortion will be applied."
-            )
+            # load meta data
+            with open(metapath, "r+") as j:
+                try:
+                    data = json.load(j)
+                except JSONDecodeError:
+                    logger.warning(
+                        "Json file should not be empty. Delete the empty file and run again."
+                    )
+                    return 0
+            # check if the value is inside meta.
+            camRegex = re.compile(r"\w\w\w\w-\w\w\w\w-\w\w\w\w-\w\w\w\w")
+            camera_code = camRegex.search(filepath)[0]
 
-        if "pixel2mm" in data[camera_code].keys():
-            logger.success(f"ratio of pixel to mm2 of {filepath} is loaded.")
-            self.ratio = data[camera_code]["pixel2mm"]
-        else:
-            logger.warning(
-                f"ratio of pixel to mm2 of {filepath} don't exist in {metapath}. Area will be in 0.3 mm^2 per pixel."
-            )
-        return self
+            if camera_code not in data.keys():
+                logger.warning("no camera info in meta data.")
+                return self
+
+            if "parameters" in data[camera_code].keys():
+                logger.success(f"parameters of {filepath} is loaded.")
+                self.param = data[camera_code]["parameters"]
+            else:
+                logger.warning(
+                    f"parameters of {filepath} don't exist in {metapath}. no undistortion will be applied."
+                )
+
+            if "pixel2mm" in data[camera_code].keys():
+                logger.success(f"ratio of pixel to mm2 of {filepath} is loaded.")
+                self.ratio = data[camera_code]["pixel2mm"]
+            else:
+                logger.warning(
+                    f"ratio of pixel to mm2 of {filepath} don't exist in {metapath}. Area will be in 0.3 mm^2 per pixel."
+                )
+            return self
 
     def remove(self, points: List):
         """Remove of parts of image."""
@@ -334,7 +339,12 @@ class hexa_img:
             for seg in self.mask:
                 areas.append(seg.sum())
 
-            pixel_area = statistics.median(areas)
+            if len(areas) > 0:
+                pixel_area = statistics.median(areas)
+
+            else:
+                "No relevant instance."
+                pixel_area = 0
 
         """Area of leaf area in mm^2"""
         self.area = round(pixel_area * self.ratio)

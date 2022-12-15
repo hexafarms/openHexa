@@ -67,14 +67,6 @@ def prepare_configs(cv_mode: str, weightDir: str):
     weights_path = os.path.join(weightDir, up2date_config_v, "weights.pth")
     Path(config_file_path).parents[0].mkdir(parents=True, exist_ok=True)
 
-    meta_path = os.path.join("/meta", "hexa_meta.json")
-    Path(meta_path).parents[0].mkdir(parents=True, exist_ok=True)
-
-    """MetaData is downloaded everytime."""
-    aws_meta_path = os.path.join("camera", "hexa_meta.json")
-    s3_client.download_file(meta_bucket_name, aws_meta_path, str(meta_path))
-    logger.info("Meta file for image segmentation is downloaded.")
-
     """Download if not the new version exist."""
     if not os.path.exists(config_file_path):
         aws_config_path = os.path.join(cv_mode, up2date_config_v, "config.py")

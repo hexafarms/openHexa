@@ -69,8 +69,6 @@ def compute_area_api(
 ) -> str:
     """Compute area for RESTapi."""
 
-    SEPARATOR = "-"
-
     assert mode in ["mmseg", "mmdet"], f"Mode is unknwon. Given value: {mode}"
 
     CONFIG = f"/weights/{mode}/v{version}/config.py"
@@ -86,7 +84,7 @@ def compute_area_api(
     for img in images:
         img_full_path = os.path.join(IMGFILE_DIR, img)
         hexa = replace(hexa_base)
-        hexa.load_img(filepath=img_full_path, metapath=METAPATH, separator=SEPARATOR)
+        hexa.load_img(filepath=img_full_path, metapath=METAPATH)
         hexa.undistort().segment_with_model(
             show=False, pallete_path=None
         ).compute_area().document(output)
@@ -94,55 +92,35 @@ def compute_area_api(
     return output
 
 
-def compute_area_raw_api(
-    images: List,
-    version: str = None,
-    METAPATH: str = "/openHexa/meta/hexa_meta.json",
-    IMGFILE_DIR: str = "/openHexa/data/images/pictures",
+def compute_raw_area_api(
+    images: List[str],
+    version: int,
+    IMGFILE_DIR: str,
+    mode: str = "mmseg",
 ) -> str:
-    """Compute area for RESTapi, output format is the raw list."""
+    """Compute area for RESTapi."""
 
-    SEPARATOR = "-"
-    # TODO get rid of meta file part (especially, pixel ratio part)
+    assert mode in ["mmseg", "mmdet"], f"Mode is unknwon. Given value: {mode}"
 
-    new_version = 0
-    versions = [os.path.basename(x[0]) for x in os.walk("/weights")][
-        1:
-    ]  # exclude the parent path
+    CONFIG = f"/openHexa/weights/{mode}/v{version}/config.py"
+    CHECKPOINT = f"/openHexa/weights/{mode}/v{version}/weights.pth"
 
-    if version is None:
-        "Find the best version if not given"
-
-        if len(versions) == 0:
-            NameError("No proper version inside weight folder!")
-
-        for v in versions:
-            version = int(re.search("v(.*)", v).group(1))
-            if version > new_version:
-                new_version = version
-
-    else:
-        new_version = version[1:]
-
-    CONFIG = f"/weights/v{new_version}/config.py"
-    CHECKPOINT = f"/weights/v{new_version}/weights.pth"
-
-    areas = []
+    output = {}
 
     hexa_base = hexa_img()
     """ mount segmentation model """
-    hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT)
+    hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT, mode=mode)
 
     """ process images """
     for img in images:
         img_full_path = os.path.join(IMGFILE_DIR, img)
         hexa = replace(hexa_base)
-        hexa.load_img(filepath=img_full_path, metapath=METAPATH, separator=SEPARATOR)
-        hexa.undistort().segment_with_model(
+        hexa.load_img(filepath=img_full_path)
+        hexa.segment_with_model(
             show=False, pallete_path=None
-        ).compute_area().document(areas, graph=False, volume=False)
+        ).compute_area().document(output)
 
-    return areas
+    return output
 
 
 def compute_area(args, include_header=False):

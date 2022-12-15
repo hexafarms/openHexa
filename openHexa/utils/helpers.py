@@ -58,14 +58,14 @@ def sortFilesByColor(files: List[str]) -> Dict[str, List[str]]:
         return None
 
 
-def getNewVersion(DIR: str):
+def getNewVersion(DIR: str, inputVersion: int):
     """Extract the newest version out of the list of versions."""
     new_version = 0
     versions = [os.path.basename(x[0]) for x in os.walk(DIR)][
         1:
     ]  # exclude the parent path
 
-    if version is None:
+    if inputVersion is None:
         "Find the best version if not given"
 
         if len(versions) == 0:
@@ -75,7 +75,7 @@ def getNewVersion(DIR: str):
             version = int(re.search("v(.*)", v).group(1))
             if version > new_version:
                 new_version = version
+        return new_version
 
     else:
-        new_version = version[1:]
-    return new_version
+        return inputVersion
