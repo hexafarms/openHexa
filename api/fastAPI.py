@@ -42,14 +42,11 @@ async def sync_instantSeg(location: str, version: Union[str, None] = None):
     
     newVersion = getNewVersion(weightDir, version)
 
-    config_file = os.path.join(weightDir, f"v{str(newVersion)}", "config.py")
-    checkpoint_file = os.path.join(weightDir, f"v{str(newVersion)}", "weights.pth")
-
     imgDir = os.path.join("/openHexa/images", location)
     Path(imgDir).mkdir(parents=True, exist_ok=True)
 
     bucketName = 'blink-'+location
-    imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=bucketName)['Contents']])
+    imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=bucketName)['Contents'] if "ir" not in i['Key']]) # exclude ir images.
     imgsDB = set(getFiles(
         sql= f"SELECT top_view.file_name, img_format.format FROM top_view \
             JOIN img_format \
@@ -59,12 +56,10 @@ async def sync_instantSeg(location: str, version: Union[str, None] = None):
         ) )
     imgsLocal = set(glob.glob(os.path.join(imgDir, '*.jpg'))) | set(glob.glob(os.path.join(imgDir, '*.png')))
 
-    #TODO: DB has not ext, but other has.
-
     imgs2Download = list(imgsS3 - imgsDB - imgsLocal)
 
-    # for file in imgs2Download:
-    #     s3_client.download_file(bucketName, file, os.path.join(imgDir, location, file))
+    for file in imgs2Download:
+        s3_client.download_file(bucketName, file, os.path.join(imgDir, location, file))
 
     imgs2Update = list(imgsLocal - imgsDB)
 
