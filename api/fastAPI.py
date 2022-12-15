@@ -1,11 +1,13 @@
-from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import ORJSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
-import boto3
+import io
+from PIL import Image
 import os
 from pathlib import Path
 from openHexa.utils.helpers import getNewVersion
 from tools.process import compute_raw_area_api
+from tools.segment import segment
 from configs.aws import prepare_configs, getFiles
 import glob
 from typing import Union
@@ -25,6 +27,32 @@ app.add_middleware(
 def read_root():
     return {"Hexafarms": "openHexa V1"}
 
+@app.get("/instantsegShow")
+async def show_instantSeg(file: UploadFile = File(...), version: Union[str, None] = None):
+
+    mode = "mmdet"
+
+    weightDir = os.path.join("/openHexa/weights", mode)
+
+    # Download config, weight, meta file, and return S3 client.
+    
+    newVersion = getNewVersion(weightDir, version)
+
+    imgDir = os.path.join("/openHexa/images/visualize", file.filename)
+    Path(imgDir).mkdir(parents=True, exist_ok=True)
+
+    with open(imgDir, "wb+") as file_object:
+        file_object.write(file.file.read())
+
+    pallete = segment(
+        imgDir, newVersion, IMGFILE_DIR= imgDir, mode= mode)
+
+    bytes_image = io.BytesIO()
+    im = Image.fromarray(pallete)
+    im.save(bytes_image, format="PNG")
+    
+    return Response(content=bytes_image.getvalue(), headers={'Process Done':file.filename}, media_type=("image/jpeg"or"image/png"or"image/jpg"))
+    
 
 @app.get("/instantseg")
 async def sync_instantSeg(location: str, version: Union[str, None] = None):

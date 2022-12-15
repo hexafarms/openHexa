@@ -18,14 +18,14 @@ RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/
 
 RUN conda clean --all
 
-# ENV FORCE_CUDA="1"
-# ARG DEPLOY_STAMP=unknown
 # Install MMCV, MMseg, MMdet
 RUN git clone https://github.com/hexafarms/openHexa.git /openHexa
 WORKDIR /openHexa
 
-RUN adduser --system hexa 
-USER hexa
+ARG USR=hexa
+RUN echo ${USR}
+RUN adduser --system ${USR}
+USER ${USR}
 
 ARG PYTORCH
 ARG CUDA
@@ -35,10 +35,12 @@ RUN ["/bin/bash", "-c", "pip install mmcv-full==${MMCV} -f https://download.open
 RUN pip install -r requirements/fastAPI.txt
 
 USER root
-RUN mkdir /openHexa/images
-RUN mkdir /openHexa/weights
-RUN mkdir /openHexa/meta
+RUN mkdir -p /openHexa/images
+RUN mkdir -p /openHexa/weights
+RUN mkdir -p /openHexa/meta
 
-RUN chown -R hexa /openHexa 
+RUN chown -R ${USR}: /openHexa/images
+RUN chown -R ${USR}: /openHexa/weights
+RUN chown -R ${USR}: /openHexa/meta
 
-USER hexa
+USER ${USR}

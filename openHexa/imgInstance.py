@@ -142,6 +142,10 @@ class hexa_img:
         """Return item."""
         return self.img.__getitem__(item)
 
+    def exportPallete(self):
+        """Return pallete."""
+        return self.pallete
+
     def undistort(self, outpath=None):
         """Undistort image."""
         if self.param is None:
