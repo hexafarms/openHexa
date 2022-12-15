@@ -42,11 +42,12 @@ def prepare_configs(cv_mode: str, weightDir: str):
     f = open("/run/secrets/aws")
     secret = json.load(f)
 
-    s3_client = _connect_aws_s3(secret["AWS_KEY"], secret["AWS_SECRET"], secret["AWS_REGION"])
+    s3_client = _connect_aws_s3(
+        secret["AWS_KEY"], secret["AWS_SECRET"], secret["AWS_REGION"]
+    )
 
     "Check the bucket is inside AWS S3"
     blink_bucket_name = _check_bucket(s3_client, "configs-and-weights")
-    meta_bucket_name = _check_bucket(s3_client, "hexameta")
 
     """Find the newest version"""
     relevant_versions = []
@@ -82,6 +83,7 @@ def prepare_configs(cv_mode: str, weightDir: str):
 
     return s3_client
 
+
 def getFiles(sql: str):
     """Get file name accessing DB."""
 
@@ -97,5 +99,5 @@ def getFiles(sql: str):
     cur = conn.cursor()
     cur.execute(sql)
 
-    #return set of file name.ext (i.e. hexa-1717.jpg )
-    return ['.'.join(i) for i in cur.fetchall()]
+    # return set of file name.ext (i.e. hexa-1717.jpg )
+    return [".".join(i) for i in cur.fetchall()]

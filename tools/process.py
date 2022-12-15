@@ -118,7 +118,7 @@ def compute_raw_area_api(
     for img in images:
         img_full_path = os.path.join(IMGFILE_DIR, img)
         hexa = replace(hexa_base)
-        hexa.load_img(filepath=img_full_path)
+        hexa.load_img(filepath=img_full_path).measureBright()
         hexa.segment_with_model(show=False, pallete_path=None).compute_area().document(
             output
         )
@@ -187,15 +187,18 @@ def compute_area(args, include_header=False):
 if __name__ == "__main__":
 
     images = [
-        "ecf_G8T1-K001-2173-0FSR-1668034800.jpg",
+        "ecf_G8T1-K001-2173-0CVH-ir-1669676400.jpg",
+        "ecf_G8T1-K001-2173-0CVH-ir-1669690800.jpg",
+        "ecf_G8T1-K001-2173-0CVH-rgb-1669330800.jpg",
+        "ecf_G8T1-K001-2173-0CVH-rgb-1669503600.jpg",
+        "ecf_G8T1-K001-2173-0CVH-rgb-1670886000.jpg",
+        "ecf_G8T1-K001-2173-0CVH-rgb-1670986800.jpg",
     ]
     METAPATH = "/home/huijo/codes/hexa_img_meta/data/meta/hexa_meta.json"
-    IMGFILE_DIR = "/home/huijo/Downloads"
+    IMGFILE_DIR = "/home/huijo/Downloads/brightCheck"
     mode = "mmdet"
 
-    compute_area_api(
-        images=images, METAPATH=METAPATH, IMGFILE_DIR=IMGFILE_DIR, mode=mode
-    )
+    compute_raw_area_api(images=images, version=0, IMGFILE_DIR=IMGFILE_DIR, mode=mode)
 
     # args = parse_args()
     # areas = compute_area(args, include_header=True)

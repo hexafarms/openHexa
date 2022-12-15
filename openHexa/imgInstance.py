@@ -43,8 +43,9 @@ class hexa_img:
     count: int = 1  # the number of plants in the bench
     model: Any = None
     cv_mode: str = None
+    bright: int = None
 
-    def load_img(self, filepath: str, metapath = None):
+    def load_img(self, filepath: str, metapath=None):
         """Load image."""
         self.img = cv2.imread(str(filepath))
         assert type(self.img) != type(None), f"no file {filepath} exist!"
@@ -115,6 +116,12 @@ class hexa_img:
 
         cv2.fillPoly(self.img, ptrs_black, 0)
 
+        return self
+
+    def measureBright(self):
+        """Measure the overall brighness of image."""
+        blur = cv2.blur(self.img, (7, 7))
+        self.bright = int(np.mean(blur))
         return self
 
     def update_count(self, count: int):
@@ -362,6 +369,7 @@ class hexa_img:
             "area": self.area,
             "mode": self.cv_mode,
             "computed_at": strftime("%Y-%m-%d %H:%M:%S", gmtime()),
+            "brightness": self.bright,
         }
 
 
