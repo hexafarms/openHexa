@@ -62,7 +62,7 @@ best_model/fcn_unet_s5-d16_128x128_320k_LeafDataset_T17.py",
 def compute_area_api(
     images: List[str],
     version: int,
-    METAPATH: str ,
+    METAPATH: str,
     IMGFILE_DIR: str,
     mode: str = "mmseg",
 ) -> str:
@@ -92,7 +92,7 @@ def compute_area_api(
 
 
 def compute_raw_area_api(
-    images: Union(List[str], str),
+    images: Union[List[str], str],
     version: int,
     IMGFILE_DIR: str,
     mode: str = "mmseg",
@@ -119,9 +119,9 @@ def compute_raw_area_api(
         img_full_path = os.path.join(IMGFILE_DIR, img)
         hexa = replace(hexa_base)
         hexa.load_img(filepath=img_full_path)
-        hexa.segment_with_model(
-            show=False, pallete_path=None
-        ).compute_area().document(output)
+        hexa.segment_with_model(show=False, pallete_path=None).compute_area().document(
+            output
+        )
 
     return output
 
