@@ -22,10 +22,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/")
 def read_root():
-    return {"Hexafarms": "openHexa V1"}
+    return {"openHexa": "V1"}
 
 @app.get("/instantsegShow")
 async def show_instantSeg(file: UploadFile = File(...), version: Union[str, None] = None):

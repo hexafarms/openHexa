@@ -23,7 +23,6 @@ RUN git clone https://github.com/hexafarms/openHexa.git /openHexa
 WORKDIR /openHexa
 
 ARG USR=hexa
-RUN echo ${USR}
 RUN adduser --system ${USR}
 USER ${USR}
 
@@ -35,12 +34,11 @@ RUN ["/bin/bash", "-c", "pip install mmcv-full==${MMCV} -f https://download.open
 RUN pip install -r requirements/fastAPI.txt
 
 USER root
-RUN mkdir -p /openHexa/images
-RUN mkdir -p /openHexa/weights
-RUN mkdir -p /openHexa/meta
+RUN mkdir -p /openHexa/images /openHexa/weights /openHexa/meta
 
-RUN chown -R ${USR}: /openHexa/images
-RUN chown -R ${USR}: /openHexa/weights
-RUN chown -R ${USR}: /openHexa/meta
+RUN chown -R ${USR}:0 /openHexa/images
+RUN chown -R ${USR}:0 /openHexa/weights
+RUN chown -R ${USR}:0 /openHexa/meta
+RUN chown -R ${USR}:0 /openHexa
 
 USER ${USR}

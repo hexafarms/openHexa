@@ -3,16 +3,11 @@ Examples of running Hexa img module.
 
 Author: Huijo Kim
 Email: huijo.k@hexafarms
-Version: V1.0
+Version: V1.1
 """
-import argparse
 import os
 from dataclasses import replace
-from pathlib import Path
 from typing import List, Union
-
-from loguru import logger
-
 from openHexa.imgInstance import hexa_img
 
 
