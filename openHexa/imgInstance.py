@@ -385,7 +385,13 @@ def filter_center(bbox_result: List[List], segm_result: List[List], edge: float)
     """Filter the edge side of instances"""
 
     idx2keep = []
-    h, w = segm_result[0][0].shape
+
+    if not any(segm_result):
+        # if no segmentation mask is available.
+        return bbox_result, segm_result
+
+    else:
+        h, w = segm_result[0][0].shape
 
     for idx, bbox in enumerate(bbox_result[0]):
         x1, y1, x2, y2, _ = bbox

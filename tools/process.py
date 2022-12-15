@@ -9,8 +9,7 @@ import argparse
 import os
 from dataclasses import replace
 from pathlib import Path
-import re
-from typing import List
+from typing import List, Union
 
 from loguru import logger
 
@@ -93,7 +92,7 @@ def compute_area_api(
 
 
 def compute_raw_area_api(
-    images: List[str],
+    images: Union(List[str], str),
     version: int,
     IMGFILE_DIR: str,
     mode: str = "mmseg",
@@ -110,6 +109,10 @@ def compute_raw_area_api(
     hexa_base = hexa_img()
     """ mount segmentation model """
     hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT, mode=mode)
+
+    if isinstance(images, str):
+        # if single image is feeded, then make it as a list.
+        images = [images]
 
     """ process images """
     for img in images:

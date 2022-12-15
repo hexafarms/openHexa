@@ -8,3 +8,4 @@ mmsegmentation==0.29.1
 mmdet==2.26.0
 boto3
 psycopg2-binary
+orjson

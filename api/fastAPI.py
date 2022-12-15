@@ -66,10 +66,10 @@ async def sync_instantSeg(location: str, version: Union[str, None] = None):
     # for file in imgs2Download:
     #     s3_client.download_file(bucketName, file, os.path.join(imgDir, location, file))
 
-    imgs2Update = imgsLocal - imgsDB
+    imgs2Update = list(imgsLocal - imgsDB)
 
     areas = compute_raw_area_api(
-        list(imgs2Update), newVersion, IMGFILE_DIR= imgDir, mode= mode)
+        imgs2Update, newVersion, IMGFILE_DIR= imgDir, mode= mode)
     
     return ORJSONResponse(areas)
     
