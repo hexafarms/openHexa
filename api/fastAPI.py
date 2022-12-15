@@ -59,7 +59,7 @@ async def sync_instantSeg(location: str, version: Union[str, None] = None):
     imgs2Download = list(imgsS3 - imgsDB - imgsLocal)
 
     for file in imgs2Download:
-        s3_client.download_file(bucketName, file, os.path.join(imgDir, location, file))
+        s3_client.download_file(bucketName, file, os.path.join(imgDir, file))
 
     imgs2Update = list(imgsLocal - imgsDB)
 
