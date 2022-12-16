@@ -251,8 +251,8 @@ class hexa_img:
 
             bbox_result, segm_result = inference_detector(self.model, self.img)
 
-            bbox_result, segm_result = filter_prob(bbox_result, segm_result, 0.7)
-            bbox_result, segm_result = filter_center(bbox_result, segm_result, 0.3)
+            bbox_result, segm_result = filter_prob(bbox_result, segm_result, 0.5)
+            bbox_result, segm_result = filter_center(bbox_result, segm_result, 0.2)
 
             self.mask = segm_result[0]  # only care one class
 
