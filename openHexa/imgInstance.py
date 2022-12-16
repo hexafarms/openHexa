@@ -176,15 +176,15 @@ class hexa_img:
             borderMode=cv2.BORDER_CONSTANT,
         )
 
-        if outpath is None:
-            if distort_quality_check(dst):
-                logger.success("undistortion is well processed.")
-                self.img = dst
-                return self
-            else:
-                logger.warning("undistortion failed. check the meta data.")
-                logger.info("no undistortion due to inappropriate meta data")
-                return self
+        # if outpath is None:
+        #     if distort_quality_check(dst):
+        #         logger.success("undistortion is well processed.")
+        #         self.img = dst
+        #         return self
+        #     else:
+        #         logger.warning("undistortion failed. check the meta data.")
+        #         logger.info("no undistortion due to inappropriate meta data")
+        #         return self
 
         save_name = os.path.join(outpath, "undistort_" + self.name)
         cv2.imwrite(save_name, dst)
