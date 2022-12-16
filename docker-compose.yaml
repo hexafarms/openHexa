@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  openHexa:
+    image: openhexa:v1
+    environment:
+      USR: hexa
+    volumes:
+        - /home/huijo/Desktop/mnt/weights:/openHexa/weights:rw
+        - /home/huijo/Desktop/mnt/meta:/openHexa/meta:rw
+        - /home/huijo/Desktop/mnt/images:/openHexa/images:rw
+    user: "${USR}"
+    ports:
+      - "127.0.0.1:8008:8008"
+    command: python3 -m uvicorn api.fastAPI:app --host 0.0.0.0 --port 8008
+    secrets:  
+      - aws
+      - db
+secrets:
+  aws:
+    external: true
+  db:
+    external: true
+
+# volumes can be generated separatly, not mounting.
