@@ -44,6 +44,7 @@ class hexa_img:
     model: Any = None
     cv_mode: str = None
     bright: int = None
+    bbox: List = None
 
     def load_img(self, filepath: str, metapath=None):
         """Load image."""
@@ -220,6 +221,23 @@ class hexa_img:
 
         return self
 
+    def cropInstance(self, OUT_DIR: str) -> None:
+        "Crop each instances and save them."
+        if len(self.bbox[0]) == 0:
+            return None
+
+        for idx, bbox in enumerate(self.bbox[0]):
+            x1, y1, x2, y2, _ = bbox
+            cropImg = self.img[int(y1) : int(y2), int(x1) : int(x2)]
+            cv2.imwrite(
+                os.path.join(
+                    OUT_DIR,
+                    f"{os.path.splitext(self.name)[0]}_{idx}{os.path.splitext(self.name)[1]}",
+                ),
+                cropImg,
+            )
+        logger.info(f"{idx+1} crop image(s) is(are) generated from {self.name}.")
+
     def segment_with_model(self, show=False, pallete_path=None):
         """
         Image segmentation based on MMsegmentation model is already mounted in self.
@@ -255,6 +273,7 @@ class hexa_img:
             bbox_result, segm_result = filter_center(bbox_result, segm_result, 0.2)
 
             self.mask = segm_result[0]  # only care one class
+            self.bbox = bbox_result
 
             if show:
                 """Save the segmentation image file"""
