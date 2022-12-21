@@ -1,7 +1,8 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import ORJSONResponse, Response
+from fastapi.responses import ORJSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import io
+import shutil
 from PIL import Image
 import os
 from pathlib import Path
@@ -10,7 +11,8 @@ from tools.process import compute_raw_area_api
 from tools.segment import segment
 from configs.aws import prepare_configs, getFiles
 import glob
-from typing import Union
+from typing import Union, List
+import imageio.v3 as iio
 
 app = FastAPI()
 
@@ -51,7 +53,42 @@ async def show_instantSeg(file: UploadFile = File(...), version: Union[str, None
     im.save(bytes_image, format="PNG")
     
     return Response(content=bytes_image.getvalue(), headers={'processDone':file.filename}, media_type=("image/jpeg"or"image/png"or"image/jpg"))
+
+@app.post("/instantsegsGif")
+async def gif_instantSeg(files: List[UploadFile] = File(...), version: Union[str, None] = None):
+
+    mode = "mmdet"
+
+    weightDir = os.path.join("/openHexa/weights", mode)
+
+    # Download config, weight, meta file, and return S3 client.
     
+    newVersion = getNewVersion(weightDir, version)
+
+    imgDir = []
+
+    #TODO: add directory of images
+    for file in files:
+
+        with open(file.filenameimgDir, "wb+") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        imgDir.append(file.filename)
+
+    pallete = segment(
+        imgDir, newVersion, IMGFILE_DIR= "/openHexa", mode= mode)
+
+    
+    paletteInList = 0 # TODO: process pallete (Tuple) to List
+    im = Image.fromarray(pallete) # TODO: Maybe it has to be image, not array?
+
+
+    bytes_image = io.BytesIO()
+    iio.imwrite(bytes_image, pallete, plugin="pillow", extension= ".gif")
+    # im.save(bytes_image, format="GIF")
+        
+    return StreamingResponse(bytes_image, media_type='image/gif')
+   
 
 @app.get("/instantseg")
 async def sync_instantSeg(location: str, version: Union[str, None] = None):

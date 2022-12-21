@@ -22,8 +22,10 @@ def cropInstance(
 
     assert mode in ["mmseg", "mmdet"], f"Mode is unknwon. Given value: {mode}"
 
-    CONFIG = f"/openHexa/weights/{mode}/v{version}/config.py"
-    CHECKPOINT = f"/openHexa/weights/{mode}/v{version}/weights.pth"
+    CONFIG = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/config.py"
+    CHECKPOINT = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/weights.pth"
+    # CONFIG = f"/openHexa/weights/{mode}/v{version}/config.py"
+    # CHECKPOINT = f"/openHexa/weights/{mode}/v{version}/weights.pth"
 
     hexa_base = hexa_img()
     """ mount segmentation model """
@@ -47,13 +49,23 @@ def cropInstance(
 if __name__ == "__main__":
 
     METAPATH = "/home/huijo/codes/hexa_img_meta/data/meta/hexa_meta.json"
+    # images = [
+    #     "ecf_G8T1-K001-2173-0CVH-ir-1669676400.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-ir-1669690800.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-rgb-1669330800.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-rgb-1669503600.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-rgb-1670886000.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-rgb-1670986800.jpg",
+    # ]
+    # IMGFILE_DIR = "/home/huijo/Downloads/brightCheck"
+
     IMGFILE_DIR = "/home/huijo/Desktop/mnt/images/ecf"
     import glob
     from pathlib import Path
-
     images = glob.glob(IMGFILE_DIR + "/*.jpg")
     images = [Path(i).name for i in images]
-    OUT_DIR = os.path.join(IMGFILE_DIR, "cropInstance")
+    # OUT_DIR = os.path.join(IMGFILE_DIR, "cropInstance")
+    OUT_DIR = "/media/huijo/SSD_Storage/cropInstance/ecf"
     mode = "mmdet"
 
     cropInstance(
