@@ -39,14 +39,13 @@ async def show_instantSeg(file: UploadFile = File(...), version: Union[str, None
     
     newVersion = getNewVersion(weightDir, version)
 
-
     imgDir = file.filename
 
     with open(imgDir, "wb+") as file_object:
         file_object.write(file.file.read())
 
     pallete = segment(
-        imgDir, newVersion, IMGFILE_DIR= "/openHexa", mode= mode)
+        imgDir, newVersion, IMGFILE_DIR= "/openHexa", mode= mode, filter=False)
 
     bytes_image = io.BytesIO()
     im = Image.fromarray(pallete)
@@ -75,7 +74,7 @@ async def gif_instantSeg(files: List[UploadFile] = File(...), version: Union[str
         imgDir.append(file.filename)
 
     pallete = segment(
-        imgDir, newVersion, IMGFILE_DIR= "/openHexa", mode= mode)
+        imgDir, newVersion, IMGFILE_DIR= "/openHexa", mode= mode, filter=False)
 
     imgs = [Image.fromarray(i) for i in pallete]
 
@@ -113,7 +112,7 @@ async def sync_instantSeg(location: str, version: Union[str, None] = None):
         obj['Key'] for page in pages for obj in page['Contents']  
         if ('ir' not in obj['Key'])
     ]) # exclude ir images.
-    # imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=bucketName)['Contents'] if "ir" not in i['Key']]) 
+
     imgsDB = set(getFiles(
         sql= f"SELECT top_view.file_name, img_format.format FROM top_view \
             JOIN img_format \

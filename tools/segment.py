@@ -16,6 +16,7 @@ def segment(
     version: int,
     IMGFILE_DIR: str,
     mode: str = "mmseg",
+    filter: bool = True,
 ) -> str:
     """Compute area for RESTapi."""
 
@@ -37,7 +38,7 @@ def segment(
         img_full_path = os.path.join(IMGFILE_DIR, img)
         hexa = replace(hexa_base)
         hexa.load_img(filepath=img_full_path)
-        hexa.segment_with_model(show=False, pallete_path=None)
+        hexa.segment_with_model(show=False, pallete_path=None, filter=filter)
 
         if hexa_base.pallete is None:
             hexa_base.pallete = [hexa.pallete.copy()]

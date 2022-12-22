@@ -238,7 +238,7 @@ class hexa_img:
             )
         logger.info(f"{idx+1} crop image(s) is(are) generated from {self.name}.")
 
-    def segment_with_model(self, show=False, pallete_path=None):
+    def segment_with_model(self, show=False, pallete_path=None, filter=True):
         """
         Image segmentation based on MMsegmentation model is already mounted in self.
 
@@ -269,8 +269,11 @@ class hexa_img:
 
             bbox_result, segm_result = inference_detector(self.model, self.img)
 
-            bbox_result, segm_result = filter_prob(bbox_result, segm_result, 0.5)
-            bbox_result, segm_result = filter_center(bbox_result, segm_result, 0.2)
+            if filter:
+                # if filter is true, use show only relevant prediction.
+
+                bbox_result, segm_result = filter_prob(bbox_result, segm_result, 0.5)
+                bbox_result, segm_result = filter_center(bbox_result, segm_result, 0.2)
 
             self.mask = segm_result[0]  # only care one class
             self.bbox = bbox_result
