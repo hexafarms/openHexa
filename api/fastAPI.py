@@ -106,7 +106,14 @@ async def sync_instantSeg(location: str, version: Union[str, None] = None):
     Path(imgDir).mkdir(parents=True, exist_ok=True)
 
     bucketName = 'blink-'+location
-    imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=bucketName)['Contents'] if "ir" not in i['Key']]) # exclude ir images.
+
+    paginator = s3_client.get_paginator('list_objects_v2')
+    pages = paginator.paginate(Bucket=bucketName, Prefix=f"{location}")
+    imgsS3 = set([
+        obj['Key'] for page in pages for obj in page['Contents']  
+        if ('ir' not in obj['Key'])
+    ]) # exclude ir images.
+    # imgsS3 = set([i['Key'] for i in s3_client.list_objects(Bucket=bucketName)['Contents'] if "ir" not in i['Key']]) 
     imgsDB = set(getFiles(
         sql= f"SELECT top_view.file_name, img_format.format FROM top_view \
             JOIN img_format \
