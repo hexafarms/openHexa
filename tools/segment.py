@@ -39,7 +39,12 @@ def segment(
         hexa.load_img(filepath=img_full_path)
         hexa.segment_with_model(show=False, pallete_path=None)
 
-    return hexa.exportPallete()
+        if hexa_base.pallete is None:
+            hexa_base.pallete = [hexa.pallete.copy()]
+        else:
+            hexa_base.pallete.append(hexa.pallete.copy())
+
+    return hexa_base.exportPallete()
 
 
 if __name__ == "__main__":

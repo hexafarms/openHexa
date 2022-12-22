@@ -67,10 +67,9 @@ async def gif_instantSeg(files: List[UploadFile] = File(...), version: Union[str
 
     imgDir = []
 
-    #TODO: add directory of images
     for file in files:
 
-        with open(file.filenameimgDir, "wb+") as buffer:
+        with open(file.filename, "wb+") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
         imgDir.append(file.filename)
@@ -78,14 +77,11 @@ async def gif_instantSeg(files: List[UploadFile] = File(...), version: Union[str
     pallete = segment(
         imgDir, newVersion, IMGFILE_DIR= "/openHexa", mode= mode)
 
-    
-    paletteInList = 0 # TODO: process pallete (Tuple) to List
-    im = Image.fromarray(pallete) # TODO: Maybe it has to be image, not array?
-
+    imgs = [Image.fromarray(i) for i in pallete]
 
     bytes_image = io.BytesIO()
-    iio.imwrite(bytes_image, pallete, plugin="pillow", extension= ".gif")
-    # im.save(bytes_image, format="GIF")
+    iio.imwrite(bytes_image, imgs, plugin="pillow", extension= ".gif", duration=1000, loop=0)
+    bytes_image.seek(0)
         
     return StreamingResponse(bytes_image, media_type='image/gif')
    

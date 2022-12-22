@@ -34,7 +34,7 @@ class hexa_img:
 
     img: np.ndarray = None
     mask: Union[np.ndarray, List[np.ndarray]] = None
-    pallete: np.ndarray = None
+    pallete: Union[np.ndarray, List[np.ndarray]] = None
     name: str = None
     param: Optional[Dict[str, int]] = None  # camera parameter
     ratio: Optional[float] = 0.3  # mm2 per pixel, 0.3 is average at 40cm height
