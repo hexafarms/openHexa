@@ -28,15 +28,15 @@ app.add_middleware(
 def read_root():
     return {"openHexa": "V1"}
 
-@app.post("/instantsegShow")
-async def show_instantSeg(file: UploadFile = File(...), version: Union[str, None] = None):
+@app.post("/segShow")
+async def segShow(file: UploadFile = File(...), version: Union[str, None] = None, mode: str = "mmdet"):
 
-    mode = "mmdet"
+    assert mode in ["mmdet", "mmseg"], f"In appropriate mode. Given mode is {mode} but it should be either mmdet or mmseg" 
 
     weightDir = os.path.join("/openHexa/weights", mode)
 
     # Download config, weight, meta file, and return S3 client.
-    
+    prepare_configs(mode, weightDir)
     newVersion = getNewVersion(weightDir, version)
 
     imgDir = file.filename
@@ -48,20 +48,22 @@ async def show_instantSeg(file: UploadFile = File(...), version: Union[str, None
         imgDir, newVersion, IMGFILE_DIR= "/openHexa", mode= mode, filter=False)
 
     bytes_image = io.BytesIO()
-    im = Image.fromarray(pallete)
-    im.save(bytes_image, format="PNG")
-    
-    return Response(content=bytes_image.getvalue(), headers={'processDone':file.filename}, media_type=("image/jpeg"or"image/png"or"image/jpg"))
+    imgs = [Image.fromarray(i) for i in pallete]
+    iio.imwrite(bytes_image, imgs, plugin="pillow", extension= ".png")
+    bytes_image.seek(0)
 
-@app.post("/instantsegsGif")
-async def gif_instantSeg(files: List[UploadFile] = File(...), version: Union[str, None] = None):
+    return StreamingResponse(bytes_image, headers={'processDone':file.filename}, media_type=("image/jpeg"or"image/png"or"image/jpg"))
 
-    mode = "mmdet"
+
+@app.post("/segsGif")
+async def segsGif(files: List[UploadFile] = File(...), version: Union[str, None] = None, mode: str = "mmdet"):
+
+    assert mode in ["mmdet", "mmseg"], f"In appropriate mode. Given mode is {mode} but it should be either mmdet or mmseg"
 
     weightDir = os.path.join("/openHexa/weights", mode)
 
     # Download config, weight, meta file, and return S3 client.
-    
+    prepare_configs(mode, weightDir)
     newVersion = getNewVersion(weightDir, version)
 
     imgDir = []
@@ -84,14 +86,13 @@ async def gif_instantSeg(files: List[UploadFile] = File(...), version: Union[str
         
     return StreamingResponse(bytes_image, media_type='image/gif')
    
-
 @app.get("/instantseg")
-async def sync_instantSeg(location: str, version: Union[str, None] = None):
+async def sync_instantSeg(location: str, version: Union[str, None] = None, mode: str = "mmdet"):
 
     if location is None:
         return {"Warning": "Location is not provided!"}
 
-    mode = "mmdet"
+    assert mode in ["mmdet", "mmseg"], f"In appropriate mode. Given mode is {mode} but it should be either mmdet or mmseg"
 
     weightDir = os.path.join("/openHexa/weights", mode)
 
@@ -108,11 +109,6 @@ async def sync_instantSeg(location: str, version: Union[str, None] = None):
 
     paginator = s3_client.get_paginator('list_objects_v2')
     pages = paginator.paginate(Bucket=bucketName, Prefix=f"{location}")
-    imgsS3 = set([
-        obj['Key'] for page in pages for obj in page['Contents']  
-        if ('ir' not in obj['Key'])
-    ]) # exclude ir images.
-
     imgsDB = set(getFiles(
         sql= f"SELECT top_view.file_name, img_format.format FROM top_view \
             JOIN img_format \
@@ -120,9 +116,16 @@ async def sync_instantSeg(location: str, version: Union[str, None] = None):
             WHERE top_view.location = \
             (SELECT location_id from locations WHERE location='{location}');"
         ) )
+
     imgsLocal = set(glob.glob(os.path.join(imgDir, '*.jpg'))) | set(glob.glob(os.path.join(imgDir, '*.png')))
 
-    imgs2Download = list(imgsS3 - imgsDB - imgsLocal)
+    imgs2Download = set([
+        obj['Key'] for page in pages for obj in page['Contents']  
+        if ('ir' not in obj['Key'] and
+            obj['Key'] not in imgsDB and
+            obj['Key'] not in imgsLocal)
+    ]) # exclude ir images.
+    # imgs2Download = list(imgsS3 - imgsDB - imgsLocal)
 
     for file in imgs2Download:
         s3_client.download_file(bucketName, file, os.path.join(imgDir, file))
