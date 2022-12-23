@@ -13,6 +13,8 @@ from configs.aws import prepare_configs, getFiles
 import glob
 from typing import Union, List
 import imageio.v3 as iio
+from tqdm import tqdm
+
 
 app = FastAPI()
 
@@ -117,17 +119,21 @@ async def sync_instantSeg(location: str, version: Union[str, None] = None, mode:
             (SELECT location_id from locations WHERE location='{location}');"
         ) )
 
-    imgsLocal = set(glob.glob(os.path.join(imgDir, '*.jpg'))) | set(glob.glob(os.path.join(imgDir, '*.png')))
+    imgsLocal = set(
+        [Path(i).name for i in glob.glob(os.path.join(imgDir, '*.jpg'))]
+        ) | set(
+            [Path(j).name for j in glob.glob(os.path.join(imgDir, '*.png'))]
+            )
 
     imgs2Download = set([
         obj['Key'] for page in pages for obj in page['Contents']  
-        if ('ir' not in obj['Key'] and
-            obj['Key'] not in imgsDB and
-            obj['Key'] not in imgsLocal)
+        if (('ir' not in obj['Key']) and
+            (obj['Key'] not in imgsDB) and
+            (obj['Key'] not in imgsLocal))
     ]) # exclude ir images.
     # imgs2Download = list(imgsS3 - imgsDB - imgsLocal)
 
-    for file in imgs2Download:
+    for file in tqdm(imgs2Download):
         s3_client.download_file(bucketName, file, os.path.join(imgDir, file))
 
     imgs2Update = list(imgsLocal - imgsDB)
