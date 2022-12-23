@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import List, Union
 
 from loguru import logger
+from tqdm import tqdm
 
 from openHexa.imgInstance import hexa_img
 
@@ -80,7 +81,7 @@ def compute_area_api(
     hexa_base.mount(config_file=CONFIG, checkpoint_file=CHECKPOINT, mode=mode)
 
     """ process images """
-    for img in images:
+    for img in tqdm(images):
         img_full_path = os.path.join(IMGFILE_DIR, img)
         hexa = replace(hexa_base)
         hexa.load_img(filepath=img_full_path, metapath=METAPATH)
@@ -115,7 +116,7 @@ def compute_raw_area_api(
         images = [images]
 
     """ process images """
-    for img in images:
+    for img in tqdm(images):
         img_full_path = os.path.join(IMGFILE_DIR, img)
         hexa = replace(hexa_base)
         hexa.load_img(filepath=img_full_path).measureBright()
