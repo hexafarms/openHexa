@@ -25,7 +25,7 @@ setup(
     author="DeepAerialMapper Contributors",
     author_email="huijo@hexafarms.com",
     keywords="computer vision, phenomics",
-    packages=find_packages(exclude=("api", "configs", "demo", "docker", "tools")),
+    packages=find_packages(exclude=("api", "demo", "docker", "tools")),
     url="https://github.com/hexafarms/Hexa_image",
     license="Apache License 2.0",
     install_requires=install_requires,
