@@ -37,7 +37,8 @@ class hexa_img:
     pallete: Union[np.ndarray, List[np.ndarray]] = None
     name: str = None
     param: Optional[Dict[str, int]] = None  # camera parameter
-    ratio: Optional[float] = 0.3  # mm2 per pixel, 0.3 is average at 40cm height
+    # mm2 per pixel, 0.3 is average at 40cm height
+    ratio: Optional[float] = 0.3
     area: Optional[float] = 0
     volume: Optional[float] = 0
     count: int = 1  # the number of plants in the bench
@@ -54,7 +55,8 @@ class hexa_img:
         self.name = os.path.basename(filepath)
 
         if metapath is None:
-            logger.info("It is the raw-mode. No camera undistortion and adjust area.")
+            logger.info(
+                "It is the raw-mode. No camera undistortion and adjust area.")
             return self
 
         else:
@@ -84,7 +86,8 @@ class hexa_img:
                 )
 
             if "pixel2mm" in data[camera_code].keys():
-                logger.success(f"ratio of pixel to mm2 of {filepath} is loaded.")
+                logger.success(
+                    f"ratio of pixel to mm2 of {filepath} is loaded.")
                 self.ratio = data[camera_code]["pixel2mm"]
             else:
                 logger.warning(
@@ -150,7 +153,8 @@ class hexa_img:
     def undistort(self, outpath=None):
         """Undistort image."""
         if self.param is None:
-            logger.warning("Distortion is not processe. Use the original image.")
+            logger.warning(
+                "Distortion is not processe. Use the original image.")
             return self
 
         mtx = np.array(self.param["intrinsic"])
@@ -176,36 +180,31 @@ class hexa_img:
             borderMode=cv2.BORDER_CONSTANT,
         )
 
-        # if outpath is None:
-        #     if distort_quality_check(dst):
-        #         logger.success("undistortion is well processed.")
-        #         self.img = dst
-        #         return self
-        #     else:
-        #         logger.warning("undistortion failed. check the meta data.")
-        #         logger.info("no undistortion due to inappropriate meta data")
-        #         return self
-
         save_name = os.path.join(outpath, "undistort_" + self.name)
         cv2.imwrite(save_name, dst)
         logger.info(f"{save_name} is successfully saved.")
 
     def segment(
         self,
-        config_file,
-        checkpoint_file,
-        show=False,
-        pallete_path=None,
+        config_file: str,
+        checkpoint_file: str,
+        show: bool = False,
+        pallete_path: str = None,
         device="cuda:0",
     ):
-        """
-        Image segmentation based on MMsegmentation.
+        """Segmentation function
 
-        config_file: configure file of MMsegmentation
-        checkpoint_file: weight files
+        Args:
+            config_file (str): path of configuration file
+            checkpoint_file (str): path of weight file
+            show (bool, optional): whether to visualize. Defaults to False.
+            pallete_path (str, optional): path of visualization. Defaults to None.
+            device (str, optional): Defaults to "cuda:0".
 
-        TODO: write more
+        Returns:
+            object itself
         """
+
         from mmseg.apis import inference_segmentor, init_segmentor
 
         model = init_segmentor(config_file, checkpoint_file, device=device)
@@ -228,7 +227,7 @@ class hexa_img:
 
         for idx, bbox in enumerate(self.bbox[0]):
             x1, y1, x2, y2, _ = bbox
-            cropImg = self.img[int(y1) : int(y2), int(x1) : int(x2)]
+            cropImg = self.img[int(y1): int(y2), int(x1): int(x2)]
             cv2.imwrite(
                 os.path.join(
                     OUT_DIR,
@@ -236,7 +235,8 @@ class hexa_img:
                 ),
                 cropImg,
             )
-        logger.info(f"{idx+1} crop image(s) is(are) generated from {self.name}.")
+        logger.info(
+            f"{idx+1} crop image(s) is(are) generated from {self.name}.")
 
     def segment_with_model(self, show=False, pallete_path=None, filter=True):
         """
@@ -256,11 +256,13 @@ class hexa_img:
                 self.model.show_result(
                     self.img,
                     self.mask,
-                    out_file=os.path.join(pallete_path, "palatte_" + self.name),
+                    out_file=os.path.join(
+                        pallete_path, "palatte_" + self.name),
                     opacity=0.5,
                 )
             else:
-                self.pallete = self.model.show_result(self.img, self.mask, opacity=0.5)
+                self.pallete = self.model.show_result(
+                    self.img, self.mask, opacity=0.5)
 
             return self
 
@@ -272,8 +274,10 @@ class hexa_img:
             if filter:
                 # if filter is true, use show only relevant prediction.
 
-                bbox_result, segm_result = filter_prob(bbox_result, segm_result, 0.5)
-                bbox_result, segm_result = filter_center(bbox_result, segm_result, 0.2)
+                bbox_result, segm_result = filter_prob(
+                    bbox_result, segm_result, 0.5)
+                bbox_result, segm_result = filter_center(
+                    bbox_result, segm_result, 0.2)
 
             self.mask = segm_result[0]  # only care one class
             self.bbox = bbox_result
@@ -283,7 +287,8 @@ class hexa_img:
                 self.pallete = self.model.show_result(
                     self.img,
                     (bbox_result, segm_result),
-                    out_file=os.path.join(pallete_path, "palatte_" + self.name),
+                    out_file=os.path.join(
+                        pallete_path, "palatte_" + self.name),
                 )
 
             else:
@@ -305,12 +310,14 @@ class hexa_img:
         if mode == "mmseg":
             from mmseg.apis import init_segmentor
 
-            self.model = init_segmentor(config_file, checkpoint_file, device=device)
+            self.model = init_segmentor(
+                config_file, checkpoint_file, device=device)
 
         elif mode == "mmdet":
             from mmdet.apis import init_detector
 
-            self.model = init_detector(config_file, checkpoint_file, device=device)
+            self.model = init_detector(
+                config_file, checkpoint_file, device=device)
 
         else:
             ValueError("Unknown mode.")
@@ -329,7 +336,8 @@ class hexa_img:
             else:
                 mask = self.mask
 
-            output = cv2.morphologyEx(mask.astype("uint8"), cv2.MORPH_OPEN, kernel)
+            output = cv2.morphologyEx(mask.astype(
+                "uint8"), cv2.MORPH_OPEN, kernel)
 
             contours, _ = cv2.findContours(
                 output, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
@@ -349,22 +357,6 @@ class hexa_img:
                     continue
                 pixel_area += c_area
                 count += 1
-
-            # # volume model  (assumtion: we know the number of separate plants)
-            # if count > self.count:
-            #     """If new plants are transplanted, then update the count value."""
-            #     logger.info(f"Update the number of plants from {self.count} to {count}")
-            #     self.count = count
-
-            # assert self.count != 0, "There is no plants in the image."
-
-            # volume = (
-            #     2
-            #     / 3
-            #     * np.pi
-            #     * ((pixel_area / self.count * self.ratio / np.pi) ** 1.5)
-            #     * self.count
-            # )
 
         elif self.cv_mode == "mmdet":
             areas = []
@@ -410,7 +402,8 @@ def filter_prob(bbox_result: List[List], segm_result: List[List], p: float):
             idx2keep.append(idx)
 
     bbox_result[0] = bbox_result[0][idx2keep]
-    segm_result[0] = [seg for i, seg in enumerate(segm_result[0]) if i in idx2keep]
+    segm_result[0] = [seg for i, seg in enumerate(
+        segm_result[0]) if i in idx2keep]
 
     return bbox_result, segm_result
 
@@ -439,7 +432,8 @@ def filter_center(bbox_result: List[List], segm_result: List[List], edge: float)
             idx2keep.append(idx)
 
     bbox_result[0] = bbox_result[0][idx2keep]
-    segm_result[0] = [seg for i, seg in enumerate(segm_result[0]) if i in idx2keep]
+    segm_result[0] = [seg for i, seg in enumerate(
+        segm_result[0]) if i in idx2keep]
 
     return bbox_result, segm_result
 
@@ -481,8 +475,10 @@ class HexaStereo:
         ), f"Error! Two different color codes are found."
 
         self.rgb = [
-            cv2.cvtColor(cv2.imread(filepaths[0].__str__()), cv2.COLOR_BGR2RGB),
-            cv2.cvtColor(cv2.imread(filepaths[1].__str__()), cv2.COLOR_BGR2RGB),
+            cv2.cvtColor(cv2.imread(
+                filepaths[0].__str__()), cv2.COLOR_BGR2RGB),
+            cv2.cvtColor(cv2.imread(
+                filepaths[1].__str__()), cv2.COLOR_BGR2RGB),
         ]
         return self
 
@@ -498,8 +494,10 @@ class HexaStereo:
         ), f"Error! Two different color codes are found."
 
         self.ir = [
-            cv2.cvtColor(cv2.imread(filepaths[0].__str__()), cv2.COLOR_BGR2GRAY),
-            cv2.cvtColor(cv2.imread(filepaths[1].__str__()), cv2.COLOR_BGR2GRAY),
+            cv2.cvtColor(cv2.imread(
+                filepaths[0].__str__()), cv2.COLOR_BGR2GRAY),
+            cv2.cvtColor(cv2.imread(
+                filepaths[1].__str__()), cv2.COLOR_BGR2GRAY),
         ]
 
         return self
@@ -528,8 +526,10 @@ class HexaPallelDepth(HexaStereo):
             blockSize=blockSize,
         )
 
-        self.rgb_disparity_map = _computeDisparity(stereo, self.rgb[0], self.rgb[1])
-        self.ir_disparity_map = _computeDisparity(stereo, self.ir[0], self.ir[1])
+        self.rgb_disparity_map = _computeDisparity(
+            stereo, self.rgb[0], self.rgb[1])
+        self.ir_disparity_map = _computeDisparity(
+            stereo, self.ir[0], self.ir[1])
 
         if show:
             fig, ax = plt.subplots(figsize=(16, 8), nrows=2, ncols=2)

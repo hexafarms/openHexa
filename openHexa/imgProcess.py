@@ -24,7 +24,8 @@ class hexa_process:
         """Calibrate camera parameters."""
         objpoints = []
         imgpoints = []
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+        criteria = (cv2.TERM_CRITERIA_EPS +
+                    cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
         winSize = (11, 11)
         zeroZone = (-1, -1)
         objp = np.zeros((corner_h * corner_w, 3), np.float32)
@@ -54,7 +55,8 @@ class hexa_process:
             self.size = gray.shape[::-1]
 
             # Find the chess board corners
-            ret, corners = cv2.findChessboardCorners(gray, (corner_h, corner_w), None)
+            ret, corners = cv2.findChessboardCorners(
+                gray, (corner_h, corner_w), None)
 
             # If found, add object points, image points (after refining them)
             if ret is True:
@@ -80,7 +82,8 @@ class hexa_process:
         )
 
         if ret < 0.5:
-            logger.info(f"Your RMS re-projection error is {ret}. This is acceptable.")
+            logger.info(
+                f"Your RMS re-projection error is {ret}. This is acceptable.")
             value = {"intrinsic": mtx, "distortion coef.": dist}
             self._update_meta(
                 self.camera_code + separator,
@@ -126,7 +129,8 @@ class hexa_process:
             and "parameters" in data[self.camera_code].keys()
         ):
             mtx = np.array(data[self.camera_code]["parameters"]["intrinsic"])
-            dist = np.array(data[self.camera_code]["parameters"]["distortion coef."])
+            dist = np.array(data[self.camera_code]
+                            ["parameters"]["distortion coef."])
             undist_src = self._undistort(src, mtx, dist)
             if distort_quality_check(undist_src):
                 src = undist_src
@@ -139,7 +143,8 @@ class hexa_process:
         )
 
         if radius == 0:
-            logger.info(f"{filepath} is not applicable for circle Hough transform.")
+            logger.info(
+                f"{filepath} is not applicable for circle Hough transform.")
             return None
 
         ratio = self._compute_ratio(radius, actual_dim)
@@ -188,7 +193,8 @@ class hexa_process:
         """
         height, width = src.shape[:2]
 
-        logger.info(f"Extract circles using parameters: par1: {par1}, par2: {par2}")
+        logger.info(
+            f"Extract circles using parameters: par1: {par1}, par2: {par2}")
 
         circles = cv2.HoughCircles(
             src,
@@ -324,7 +330,8 @@ class hexa_process:
 
                         if type(value) in [int, float, np.float64]:
                             # if pix2dim,
-                            diff = abs(data[key_img_name][mode] - value) > value * 0.2
+                            diff = abs(data[key_img_name]
+                                       [mode] - value) > value * 0.2
                         else:
                             # if camera parameter
                             diff = (
@@ -335,7 +342,8 @@ class hexa_process:
                                             :, 1
                                         ]
                                         - np.array(
-                                            list(data[key_img_name][mode].items()),
+                                            list(data[key_img_name]
+                                                 [mode].items()),
                                             dtype=object,
                                         )[:, 1]
                                     )
@@ -354,10 +362,12 @@ class hexa_process:
                                 )
                                 data[key_img_name][mode] = value
                                 with open(loc_meta, "w") as k:
-                                    json.dump(data, k, indent=4, cls=NumpyEncoder)
+                                    json.dump(data, k, indent=4,
+                                              cls=NumpyEncoder)
 
                         else:
-                            logger.info(f"No update the value of {key_img_name}.")
+                            logger.info(
+                                f"No update the value of {key_img_name}.")
                     else:
                         data[key_img_name][mode] = value
                         with open(loc_meta, "w") as k:
@@ -378,20 +388,7 @@ class hexa_process:
 
 def distort_quality_check(img: np.ndarray) -> bool:
     """Check if the undistorted image is correct given the input is from fish-eye camera."""
-    h, w, _ = img.shape
-    # h_edge = h//40
-    # w_edge = w//40
-
     # TODO: develop appropriate algorithm to check if the distortion is properly done or not.
 
     """ Before the proper algorithm is devleoped, always return True. (believe that distortion is successfully done. """
     return True
-
-    # if img[:h_edge, :w_edge].sum() + img[-h_edge:, -w_edge:].sum() + img[:h_edge, -w_edge:].sum() + img[-h_edge:, :w_edge].sum() == 0:
-    #     """ Undistortion failed """
-    #     logger.warning("Distortion has failed. Check the calibration process again.")
-    #     return False
-
-    # else:
-    #     logger.success("Distortion is well done.")
-    #     return True

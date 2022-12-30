@@ -5,6 +5,8 @@ hexa_meta.json
 output
 *.csv
 *.jpg
+openHexa.egg-info
+settings.json
 
 # ... except the .gitignore...
 !.gitignore

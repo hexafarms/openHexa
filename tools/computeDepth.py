@@ -6,12 +6,20 @@ from openHexa.utils.helpers import *
 from openHexa.imgInstance import HexaPallelDepth
 
 
-def sortFiles(LOCAL_PATH: str, setup: Dict) -> List[Dict[str, List[Path]]]:
-    imgFiles = Path(LOCAL_PATH).glob("*.jpg")
+def sortFiles(LOCAL_PATH: str, setup: Dict) -> List[Dict[str, List[str]]]:
+    """sort files based on camera and time.
 
-    imgFilesPerLocation = [[]] * len(
-        setup
-    )  # Make nested list with the number of cameras.
+    Args:
+        LOCAL_PATH (str): Local path where image are located.
+        setup (Dict): Dictionary from credential files
+
+    Returns:
+        List[Dict[str, List[Path]]]: {"rgb": [str], "ir": [str], "codes": [str]}
+    """
+
+    imgFiles = Path(LOCAL_PATH).glob("*.jpg")
+    # Make nested list with the number of cameras.
+    imgFilesPerLocation = [[]] * len(setup)
 
     for i, (key, val) in enumerate(setup.items()):
         logger.info(f"Image files of {key} are searched.")
@@ -35,17 +43,39 @@ def sortFiles(LOCAL_PATH: str, setup: Dict) -> List[Dict[str, List[Path]]]:
 
 
 def findDistance(setup: Dict, codes: List) -> int:
+    """extract distance between two camera using camera code
+
+    Args:
+        setup (Dict): Dictionary from credential files
+        codes (List): two camera codes
+
+    Returns:
+        int: distance between two cameras
+    """
     for _, val in setup.items():
 
         if sorted(val.get("camera")) == sorted(codes):
             return val.get("distance")
 
+    return KeyError("Can't find distance from two cameras from the setup file.")
+
 
 def findDefaultDepth(setup: Dict, codes: List) -> int:
+    """Find default depth where the came is mounted
+
+    Args:
+        setup (Dict): Dictionary from credential files
+        codes (List): two camera codes
+
+    Returns:
+        int: depth from cameras to the target.
+    """
     for _, val in setup.items():
 
         if sorted(val.get("camera")) == sorted(codes):
             return val.get("depth")
+
+    return KeyError("Can't find depth of cameras from the setup file.")
 
 
 def main(LOCAL_PATH, setup):

@@ -22,10 +22,10 @@ def cropInstance(
 
     assert mode in ["mmseg", "mmdet"], f"Mode is unknwon. Given value: {mode}"
 
-    CONFIG = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/config.py"
-    CHECKPOINT = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/weights.pth"
-    # CONFIG = f"/openHexa/weights/{mode}/v{version}/config.py"
-    # CHECKPOINT = f"/openHexa/weights/{mode}/v{version}/weights.pth"
+    # CONFIG = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/config.py"
+    # CHECKPOINT = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/weights.pth"
+    CONFIG = f"/openHexa/weights/{mode}/v{version}/config.py"
+    CHECKPOINT = f"/openHexa/weights/{mode}/v{version}/weights.pth"
 
     hexa_base = hexa_img()
     """ mount segmentation model """

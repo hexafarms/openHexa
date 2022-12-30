@@ -27,7 +27,8 @@ def sortFilesByTime(files: List[str]) -> List[List[str]]:
     for file in files:
         epochTimeOfFile = int(file.stem.split("-")[-1])
         if epochTimeOfFile != epochTime:
-            FilesByTimeWithList.append([file])  # new time, then add a new list.
+            # new time, then add a new list.
+            FilesByTimeWithList.append([file])
             epochTime = epochTimeOfFile
         else:
             FilesByTimeWithList[-1].append(
