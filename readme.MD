@@ -4,10 +4,9 @@
 
 ## Introduction
 
-hexafarms' software-as-a-service (SaaS) lets controlled-environment agriculture save costs upto 40%.
-Computer vision tool-kits are being published in this repo.
-From plant images, valueable features are extract using this repo.
-Our AI model is trained on top all rich features.
+hexafarms' SaaS lets controlled-environment agriculture save costs.
+One part of Saas consists of computer vision, and its tool-kits are published in this repo.
+hexafarms' AI model is, therefore, trained on top all rich features extracted from computer vision toolkit.
 
 ## Setup
 
