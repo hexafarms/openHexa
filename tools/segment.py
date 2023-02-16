@@ -9,7 +9,8 @@ import os
 from dataclasses import replace
 from typing import List, Union
 from openHexa.imgInstance import hexa_img
-
+import torch
+import gc
 
 def segment(
     images: Union[List[str], str],
@@ -36,6 +37,7 @@ def segment(
     """ process images """
     for img in images:
         img_full_path = os.path.join(IMGFILE_DIR, img)
+        
         hexa = replace(hexa_base)
         hexa.load_img(filepath=img_full_path)
         hexa.segment_with_model(show=False, pallete_path=None, filter=filter)
@@ -44,6 +46,12 @@ def segment(
             hexa_base.pallete = [hexa.pallete.copy()]
         else:
             hexa_base.pallete.append(hexa.pallete.copy())
+
+    if torch.cuda.is_available():
+        # free GPU memory!
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
 
     return hexa_base.exportPallete()
 

@@ -13,6 +13,8 @@ from typing import List, Union
 
 from loguru import logger
 from tqdm import tqdm
+import torch
+import gc
 
 from openHexa.imgInstance import hexa_img
 
@@ -89,6 +91,12 @@ def compute_area_api(
             show=False, pallete_path=None
         ).compute_area().document(output)
 
+    if torch.cuda.is_available():
+        # free GPU memory!
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+
     return output
 
 
@@ -123,6 +131,11 @@ def compute_raw_area_api(
         hexa.segment_with_model(show=False, pallete_path=None).compute_area().document(
             output
         )
+    if torch.cuda.is_available():
+        # free GPU memory!
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
 
     return output
 
@@ -181,6 +194,12 @@ def compute_area(args, include_header=False):
             show=True, pallete_path=OUTIMG
         ).compute_area().document(areas, graph=False)
         count_plants = hexa.count
+
+    if torch.cuda.is_available():
+        # free GPU memory!
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
 
     return areas
 
