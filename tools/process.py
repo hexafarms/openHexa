@@ -21,7 +21,8 @@ from openHexa.imgInstance import hexa_img
 
 def parse_args():
     """Parse input arguments."""
-    parser = argparse.ArgumentParser(description="Get Camera Calibration Parameters")
+    parser = argparse.ArgumentParser(
+        description="Get Camera Calibration Parameters")
 
     parser.add_argument(
         "--img_dir",
@@ -56,7 +57,8 @@ best_model/fcn_unet_s5-d16_128x128_320k_LeafDataset_T17.py",
 
     parser.add_argument("--separator", default="-", help="Separation key word")
 
-    parser.add_argument("--remove", default=False, help="remove irrelvant reigion.")
+    parser.add_argument("--remove", default=False,
+                        help="remove irrelvant reigion.")
 
     args = parser.parse_args()
     return args
@@ -106,12 +108,16 @@ def compute_raw_area_api(
     IMGFILE_DIR: str,
     mode: str = "mmseg",
 ) -> str:
-    """Compute area for RESTapi."""
+    """Compute area for RESTapi. It returns with meta data to save into DB and return to internal service such as hexaBM"""
 
     assert mode in ["mmseg", "mmdet"], f"Mode is unknwon. Given value: {mode}"
 
     CONFIG = f"/openHexa/weights/{mode}/v{version}/config.py"
     CHECKPOINT = f"/openHexa/weights/{mode}/v{version}/weights.pth"
+
+    # for debugging locally.
+    # CONFIG = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/config.py"
+    # CHECKPOINT = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/weights.pth"
 
     output = {}
 
@@ -206,19 +212,22 @@ def compute_area(args, include_header=False):
 
 if __name__ == "__main__":
 
-    images = [
-        "ecf_G8T1-K001-2173-0CVH-ir-1669676400.jpg",
-        "ecf_G8T1-K001-2173-0CVH-ir-1669690800.jpg",
-        "ecf_G8T1-K001-2173-0CVH-rgb-1669330800.jpg",
-        "ecf_G8T1-K001-2173-0CVH-rgb-1669503600.jpg",
-        "ecf_G8T1-K001-2173-0CVH-rgb-1670886000.jpg",
-        "ecf_G8T1-K001-2173-0CVH-rgb-1670986800.jpg",
-    ]
+    # images = [
+    #     "ecf_G8T1-K001-2173-0CVH-ir-1669676400.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-ir-1669690800.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-rgb-1669330800.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-rgb-1669503600.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-rgb-1670886000.jpg",
+    #     "ecf_G8T1-K001-2173-0CVH-rgb-1670986800.jpg",
+    # ]
     METAPATH = "/home/huijo/codes/hexa_img_meta/data/meta/hexa_meta.json"
-    IMGFILE_DIR = "/home/huijo/Downloads/brightCheck"
+    IMGFILE_DIR = "/home/huijo/Pictures/species"
+    import glob
+    images = glob.glob(f"{IMGFILE_DIR}/*.jpg")
     mode = "mmdet"
 
-    compute_raw_area_api(images=images, version=0, IMGFILE_DIR=IMGFILE_DIR, mode=mode)
+    compute_raw_area_api(images=images, version=3,
+                         IMGFILE_DIR=IMGFILE_DIR, mode=mode)
 
     # args = parse_args()
     # areas = compute_area(args, include_header=True)

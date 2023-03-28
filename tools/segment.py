@@ -12,12 +12,15 @@ from openHexa.imgInstance import hexa_img
 import torch
 import gc
 
+
 def segment(
     images: Union[List[str], str],
     version: int,
     IMGFILE_DIR: str,
     mode: str = "mmseg",
-    filter: bool = True,
+    filter: bool = False,
+    pallete_path: str = None,
+    show: bool = False
 ) -> str:
     """Compute area for RESTapi."""
 
@@ -25,6 +28,10 @@ def segment(
 
     CONFIG = f"/openHexa/weights/{mode}/v{version}/config.py"
     CHECKPOINT = f"/openHexa/weights/{mode}/v{version}/weights.pth"
+
+    # for debugging locally.
+    # CONFIG = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/config.py"
+    # CHECKPOINT = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/weights.pth"
 
     hexa_base = hexa_img()
     """ mount segmentation model """
@@ -37,10 +44,11 @@ def segment(
     """ process images """
     for img in images:
         img_full_path = os.path.join(IMGFILE_DIR, img)
-        
+
         hexa = replace(hexa_base)
         hexa.load_img(filepath=img_full_path)
-        hexa.segment_with_model(show=False, pallete_path=None, filter=filter)
+        hexa.segment_with_model(
+            show=show, pallete_path=pallete_path, filter=filter)
 
         if hexa_base.pallete is None:
             hexa_base.pallete = [hexa.pallete.copy()]
@@ -59,15 +67,12 @@ def segment(
 if __name__ == "__main__":
 
     images = [
-        "ecf_G8T1-K001-2173-0CVH-ir-1669676400.jpg",
-        "ecf_G8T1-K001-2173-0CVH-ir-1669690800.jpg",
-        "ecf_G8T1-K001-2173-0CVH-rgb-1669330800.jpg",
-        "ecf_G8T1-K001-2173-0CVH-rgb-1669503600.jpg",
-        "ecf_G8T1-K001-2173-0CVH-rgb-1670886000.jpg",
-        "ecf_G8T1-K001-2173-0CVH-rgb-1670986800.jpg",
+        "G8T1-K001-2173-0FUF-rgb-1668162570.jpg",
+        "G8T1-K001-2173-0FR1-rgb-1668351600.jpg"
     ]
     METAPATH = "/home/huijo/codes/hexa_img_meta/data/meta/hexa_meta.json"
-    IMGFILE_DIR = "/home/huijo/Downloads/brightCheck"
+    IMGFILE_DIR = "/home/huijo/Pictures/demo"
     mode = "mmdet"
 
-    segment(images=images, version=0, IMGFILE_DIR=IMGFILE_DIR, mode=mode)
+    segment(images=images, version=3, IMGFILE_DIR=IMGFILE_DIR, mode=mode,
+            pallete_path=None, show=False)

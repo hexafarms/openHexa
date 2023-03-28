@@ -125,7 +125,8 @@ class hexa_img:
     def measureBright(self):
         """Measure the overall brighness of image."""
         blur = cv2.blur(self.img, (7, 7))
-        self.bright = int(np.mean(blur))
+        imgHLS = cv2.cvtColor(blur, cv2.COLOR_BGR2HLS)
+        self.bright = int(np.mean(imgHLS[:, :, 1]))
         return self
 
     def update_count(self, count: int):
@@ -211,7 +212,7 @@ class hexa_img:
         self.mask = inference_segmentor(model, self.img)
 
         if show:
-            model.show_result(
+            self.pallete = model.show_result(
                 self.img,
                 self.mask,
                 out_file=os.path.join(pallete_path, "palatte_" + self.name),
@@ -238,7 +239,7 @@ class hexa_img:
         logger.info(
             f"{idx+1} crop image(s) is(are) generated from {self.name}.")
 
-    def segment_with_model(self, show=False, pallete_path=None, filter=True):
+    def segment_with_model(self, show=False, pallete_path=None, filter=False):
         """
         Image segmentation based on MMsegmentation model is already mounted in self.
 
@@ -284,7 +285,7 @@ class hexa_img:
 
             if show:
                 """Save the segmentation image file"""
-                self.pallete = self.model.show_result(
+                self.model.show_result(
                     self.img,
                     (bbox_result, segm_result),
                     out_file=os.path.join(
@@ -365,7 +366,7 @@ class hexa_img:
                 areas.append(seg.sum())
 
             if len(areas) > 0:
-                pixel_area = statistics.median(areas)
+                pixel_area = selectRepresentative(areas)
 
             else:
                 "No relevant instance."
@@ -389,6 +390,26 @@ class hexa_img:
             "computed_at": strftime("%Y-%m-%d %H:%M:%S", gmtime()),
             "brightness": self.bright,
         }
+
+
+def selectRepresentative(areas: List) -> int:
+    """select one value can represent area value
+
+    Args:
+        areas (List): List of areas
+
+    Returns:
+        int: one representative value
+    """
+    countAreas = len(areas)
+    if countAreas < 5:
+        return max(areas)
+
+    elif 5 <= countAreas and 10 >= countAreas:
+        # second biggest because the biggest could be wrong.
+        return sorted(areas)[-2]
+    else:
+        return statistics.median(areas)
 
 
 def filter_prob(bbox_result: List[List], segm_result: List[List], p: float):
