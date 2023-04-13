@@ -10,6 +10,8 @@ import os
 from dataclasses import replace
 from pathlib import Path
 from typing import List, Union
+import numpy as np
+import cv2
 
 from loguru import logger
 from tqdm import tqdm
@@ -209,6 +211,37 @@ def compute_area(args, include_header=False):
 
     return areas
 
+
+def compute_ndvi(rgb: np.ndarray, ir: np.ndarray) -> np.ndarray:
+    """
+    Compute NDVI from rgb and ir images.
+
+    rgb: numpy array of rgb image (3 or 4 color channels)
+    ir: numpy array of ir image (3 or 4 color channels)
+
+    return: numpy array of ndvi (1 color channel)
+    """
+    r = rgb[...,0].astype(float)
+    ir = cv2.cvtColor(ir, cv2.COLOR_RGB2GRAY).astype(float)
+
+    ndvi = np.divide(ir-r, ir+r, out=np.zeros_like(ir), where=ir+r!=0)
+
+    return ndvi
+
+def bytes2array(data: bytes) -> np.ndarray:
+    """
+    Convert bytes to RGB array
+
+    data: bytes
+
+    return: numpy array RGB
+    """
+
+    npimg = np.frombuffer(data, np.uint8)
+    frame = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+    cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    return frame
 
 if __name__ == "__main__":
 
