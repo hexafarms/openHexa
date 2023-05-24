@@ -46,6 +46,7 @@ class hexa_img:
     cv_mode: str = None
     bright: int = None
     bbox: List = None
+    health: Dict = None
 
     def load_img(self, filepath: str, metapath=None):
         """Load image."""
@@ -298,6 +299,13 @@ class hexa_img:
                 )
 
             return self
+        
+        elif self.cv_mode == "mmcls":
+            from mmcls.apis import inference_model
+
+            self.health = {self.name: inference_model(self.model, self.img)}
+            return self
+
 
     def mount(
         self,
@@ -319,6 +327,13 @@ class hexa_img:
 
             self.model = init_detector(
                 config_file, checkpoint_file, device=device)
+            
+        elif mode == "mmcls":
+            from mmcls.apis import init_model
+
+            self.model = init_model(
+                config_file, checkpoint_file, device=device)
+
 
         else:
             ValueError("Unknown mode.")
