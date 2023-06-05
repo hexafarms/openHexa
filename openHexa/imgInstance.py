@@ -47,6 +47,7 @@ class hexa_img:
     bright: int = None
     bbox: List = None
     health: Dict = None
+    lai: float = None
 
     def load_img(self, filepath: str, metapath=None):
         """Load image."""
@@ -299,13 +300,12 @@ class hexa_img:
                 )
 
             return self
-        
+
         elif self.cv_mode == "mmcls":
             from mmcls.apis import inference_model
 
             self.health = {self.name: inference_model(self.model, self.img)}
             return self
-
 
     def mount(
         self,
@@ -327,13 +327,12 @@ class hexa_img:
 
             self.model = init_detector(
                 config_file, checkpoint_file, device=device)
-            
+
         elif mode == "mmcls":
             from mmcls.apis import init_model
 
             self.model = init_model(
                 config_file, checkpoint_file, device=device)
-
 
         else:
             ValueError("Unknown mode.")
@@ -374,6 +373,9 @@ class hexa_img:
                 pixel_area += c_area
                 count += 1
 
+            # LAI is available only for semantic segmentation.
+            self.lai = pixel_area / self.img.shape[0] / self.img.shape[1]
+
         elif self.cv_mode == "mmdet":
             areas = []
 
@@ -404,7 +406,7 @@ class hexa_img:
             "mode": self.cv_mode,
             "computed_at": strftime("%Y-%m-%d %H:%M:%S", gmtime()),
             "brightness": self.bright,
-        }
+            "lai": self.lai}
 
 
 def selectRepresentative(areas: List) -> int:

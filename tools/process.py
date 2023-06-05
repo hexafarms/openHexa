@@ -147,6 +147,7 @@ def compute_raw_area_api(
 
     return output
 
+
 def classify_health_api(
     images: Union[List[str], str],
     version: int,
@@ -161,8 +162,9 @@ def classify_health_api(
     CHECKPOINT = f"/openHexa/weights/{mode}/v{version}/weights.pth"
 
     # for debugging locally.
-    # CONFIG = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/config.py"
-    # CHECKPOINT = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/weights.pth"
+    CONFIG = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/config.py"
+    CHECKPOINT = f"/home/huijo/Desktop/mnt/weights/{mode}/v{version}/weights.pth"
+    IMGFILE_DIR = "."
 
     output = {}
 
@@ -189,6 +191,7 @@ def classify_health_api(
         torch.cuda.ipc_collect()
 
     return output
+
 
 def compute_area(args, include_header=False):
     """Compute area for python module."""
@@ -263,12 +266,13 @@ def compute_ndvi(rgb: np.ndarray, ir: np.ndarray) -> np.ndarray:
 
     return: numpy array of ndvi (1 color channel)
     """
-    r = rgb[...,0].astype(float)
+    r = rgb[..., 0].astype(float)
     ir = cv2.cvtColor(ir, cv2.COLOR_RGB2GRAY).astype(float)
 
-    ndvi = np.divide(ir-r, ir+r, out=np.zeros_like(ir), where=ir+r!=0)
+    ndvi = np.divide(ir-r, ir+r, out=np.zeros_like(ir), where=ir+r != 0)
 
     return ndvi
+
 
 def bytes2array(data: bytes) -> np.ndarray:
     """
@@ -284,6 +288,7 @@ def bytes2array(data: bytes) -> np.ndarray:
     cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     return frame
+
 
 if __name__ == "__main__":
 
