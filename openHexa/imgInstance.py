@@ -407,7 +407,7 @@ class hexa_img:
             "mode": self.cv_mode,
             "computed_at": strftime("%Y-%m-%d %H:%M:%S", gmtime()),
             "brightness": self.bright,
-            "lai": -2*(math.log(self.maskRatio)*0.5*(math.pi/2))}
+            "lai": -2*(math.log(self.maskRatio)*0.5*(math.pi/2)) if self.maskRatio is not None else None}
 
         # LAI_eff = 2*integral(0 to pi/2) -ln(maskRatio)*cos(theta)*sin(theta) d(theta)
         # Assuming
