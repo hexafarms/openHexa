@@ -9,6 +9,7 @@ import json
 import os
 import re
 import statistics
+import math
 from pathlib import Path
 
 # This is for airflow api to connect into mmseg
@@ -47,7 +48,7 @@ class hexa_img:
     bright: int = None
     bbox: List = None
     health: Dict = None
-    lai: float = None
+    maskRatio: float = None
 
     def load_img(self, filepath: str, metapath=None):
         """Load image."""
@@ -374,7 +375,7 @@ class hexa_img:
                 count += 1
 
             # LAI is available only for semantic segmentation.
-            self.lai = pixel_area / self.img.shape[0] / self.img.shape[1]
+            self.maskRatio = pixel_area / self.img.shape[0] / self.img.shape[1]
 
         elif self.cv_mode == "mmdet":
             areas = []
@@ -406,7 +407,10 @@ class hexa_img:
             "mode": self.cv_mode,
             "computed_at": strftime("%Y-%m-%d %H:%M:%S", gmtime()),
             "brightness": self.bright,
-            "lai": self.lai}
+            "lai": -2*(math.log(self.maskRatio)*0.5*(math.pi/2))}
+
+        # LAI_eff = 2*integral(0 to pi/2) -ln(maskRatio)*cos(theta)*sin(theta) d(theta)
+        # Assuming
 
 
 def selectRepresentative(areas: List) -> int:
