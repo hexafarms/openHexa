@@ -265,8 +265,8 @@ class hexa_img:
                     opacity=0.5,
                 )
             else:
-                self.pallete = self.model.show_result(
-                    self.img, self.mask, opacity=0.5)
+                self.pallete = cv2.cvtColor(self.model.show_result(
+                    self.img, self.mask, opacity=0.5), cv2.COLOR_BGR2RGB)
 
             return self
 
@@ -296,9 +296,9 @@ class hexa_img:
                 )
 
             else:
-                self.pallete = self.model.show_result(
-                    self.img, (bbox_result, segm_result)
-                )
+                self.pallete = cv2.cvtColor(self.model.show_result(
+                    self.img, (bbox_result, segm_result)), cv2.COLOR_BGR2RGB)
+                
 
             return self
 
